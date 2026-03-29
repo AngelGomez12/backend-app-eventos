@@ -1,3 +1,4 @@
+/* eslint-disable node/no-extraneous-import */
 import type { Guest } from "@/contexts/events/domain/guest.entity";
 import type { Tenant } from "@/contexts/tenants/domain/tenant.entity";
 import type { User } from "@/contexts/users/domain/user.entity";
@@ -55,17 +56,17 @@ export class Event {
   @Column()
   tenantId: string;
 
-  @ManyToOne("Tenant", (tenant: any) => tenant.events)
+  @ManyToOne("Tenant", (tenant: Tenant) => tenant.events)
   @JoinColumn({ name: "tenantId" })
   tenant: Tenant;
 
   @Column()
   organizerId: string;
 
-  @ManyToOne("User", (user: any) => user.events)
+  @ManyToOne("User", (user: User) => user.events)
   @JoinColumn({ name: "organizerId" })
   organizer: User;
 
-  @OneToMany("Guest", (guest: any) => guest.event)
+  @OneToMany("Guest", (guest: Guest) => guest.event)
   guests: Guest[];
 }

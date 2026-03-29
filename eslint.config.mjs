@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// eslint-disable-next-line node/no-extraneous-import
 import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 

@@ -32,12 +32,12 @@ export class EventController {
   @Get()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({ summary: "List events based on user role and tenant" })
-  async getEvents(@CurrentTenant() tenantId: string, @CurrentUser() user: any) {
+  getEvents(@CurrentTenant() tenantId: string, @CurrentUser() user: unknown) {
     return {
       message:
         "Listing events. If Organizer, only their events. If Admin, all tenant events.",
       tenantId,
-      userRole: user.role,
+      userRole: (user as { role: UserRole }).role,
     };
   }
 
@@ -45,10 +45,7 @@ export class EventController {
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({ summary: "Get detailed information about an event" })
   @ApiParam({ name: "id", description: "Event ID" })
-  async getEventById(
-    @Param("id") id: string,
-    @CurrentTenant() tenantId: string,
-  ) {
+  getEventById(@Param("id") id: string, @CurrentTenant() tenantId: string) {
     return {
       message: `Details for event ${id} ensuring it belongs to tenant ${tenantId}`,
     };
@@ -57,7 +54,7 @@ export class EventController {
   @Post()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({ summary: "Create a new event" })
-  async createEvent(
+  createEvent(
     @CurrentTenant() tenantId: string,
     @Body() createEventDto: CreateEventDto,
   ) {
@@ -72,7 +69,7 @@ export class EventController {
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({ summary: "Change the status of an event" })
   @ApiParam({ name: "id", description: "Event ID" })
-  async updateEventStatus(
+  updateEventStatus(
     @Param("id") id: string,
     @CurrentTenant() tenantId: string,
     @Body() updateEventStatusDto: UpdateEventStatusDto,
