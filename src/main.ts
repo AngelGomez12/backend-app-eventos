@@ -1,4 +1,5 @@
-import { Logger } from "@nestjs/common";
+import fastifyCors from "@fastify/cors";
+import { Logger, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import {
@@ -9,13 +10,35 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "@/app/app.module";
 
+import { TransformInterceptor } from "@/shared/interceptors/transform.interceptor";
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   );
 
-  app.setGlobalPrefix("api");
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Configuración CORS
+  await app
+    .getHttpAdapter()
+    .getInstance()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    .register(fastifyCors as any, {
+      origin: ["http://localhost:3001"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Authorization", "Content-Type"],
+      credentials: true,
+    });
 
   const config = new DocumentBuilder()
     .setTitle("Eventos SaaS API")
@@ -24,7 +47,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api/docs", app, document);
+  SwaggerModule.setup("docs", app, document);
 
   const configService = app.get(ConfigService);
   const port = configService.get<string>("PORT", "3000");

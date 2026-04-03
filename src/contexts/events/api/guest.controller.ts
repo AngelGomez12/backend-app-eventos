@@ -9,10 +9,15 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 
 import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
@@ -30,8 +35,14 @@ import { CreateGuestDto } from "./dto/create-guest.dto";
 export class GuestController {
   @Get()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ summary: "List all guests for an event" })
-  @ApiParam({ name: "eventId", description: "Event ID" })
+  @ApiOperation({ 
+    summary: "List all guests for an event",
+    description: "Retrieves the guest list for a specific event. Access is restricted to users within the same tenant." 
+  })
+  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiOkResponse({ description: "List of guests retrieved successfully." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
   async getGuests(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
@@ -44,8 +55,15 @@ export class GuestController {
 
   @Post()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ summary: "Add a new guest to the event list" })
-  @ApiParam({ name: "eventId", description: "Event ID" })
+  @ApiOperation({ 
+    summary: "Add a new guest",
+    description: "Adds a new guest to the specified event list." 
+  })
+  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiCreatedResponse({ description: "Guest added successfully." })
+  @ApiBadRequestResponse({ description: "Invalid input data." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
   async addGuest(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
@@ -60,9 +78,15 @@ export class GuestController {
 
   @Patch(":guestId")
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ summary: "Update guest details" })
-  @ApiParam({ name: "eventId", description: "Event ID" })
-  @ApiParam({ name: "guestId", description: "Guest ID" })
+  @ApiOperation({ 
+    summary: "Update guest details",
+    description: "Modifies existing guest information." 
+  })
+  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiParam({ name: "guestId", description: "The unique identifier of the guest (UUID)" })
+  @ApiOkResponse({ description: "Guest updated successfully." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
   async updateGuest(
     @Param("eventId") eventId: string,
     @Param("guestId") guestId: string,
@@ -78,9 +102,15 @@ export class GuestController {
 
   @Delete(":guestId")
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ summary: "Remove guest from the list" })
-  @ApiParam({ name: "eventId", description: "Event ID" })
-  @ApiParam({ name: "guestId", description: "Guest ID" })
+  @ApiOperation({ 
+    summary: "Remove guest",
+    description: "Deletes a guest from the event list." 
+  })
+  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiParam({ name: "guestId", description: "The unique identifier of the guest (UUID)" })
+  @ApiOkResponse({ description: "Guest removed successfully." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
   async deleteGuest(
     @Param("eventId") eventId: string,
     @Param("guestId") guestId: string,

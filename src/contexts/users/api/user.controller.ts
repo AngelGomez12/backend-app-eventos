@@ -1,5 +1,14 @@
 import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 
 import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
 import { Roles } from "@/contexts/auth/decorators/roles.decorator";
@@ -16,7 +25,13 @@ import { CreateUserDto } from "./dto/create-user.dto";
 export class UserController {
   @Get()
   @Roles(UserRole.SALON_ADMIN)
-  @ApiOperation({ summary: "List users for a specific tenant" })
+  @ApiOperation({ 
+    summary: "List users for a specific tenant",
+    description: "Retrieves all users belonging to the current tenant. Restricted to Salon Admins." 
+  })
+  @ApiOkResponse({ description: "List of users retrieved successfully." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions (Salon Admin required)." })
   async getTenantUsers(@CurrentTenant() tenantId: string) {
     // Return mock since we don't have UserService yet
     return {
@@ -27,7 +42,14 @@ export class UserController {
 
   @Post()
   @Roles(UserRole.SALON_ADMIN)
-  @ApiOperation({ summary: "Create a new user (organizer) inside the tenant" })
+  @ApiOperation({ 
+    summary: "Create a new user inside the tenant",
+    description: "Creates a new user (usually an organizer) associated with the current tenant. Restricted to Salon Admins." 
+  })
+  @ApiCreatedResponse({ description: "User created successfully." })
+  @ApiBadRequestResponse({ description: "Invalid input data." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions (Salon Admin required)." })
   async createUser(
     @CurrentTenant() tenantId: string,
     @Body() createUserDto: CreateUserDto,

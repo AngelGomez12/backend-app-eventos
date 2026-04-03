@@ -1,10 +1,18 @@
-import { Module } from "@nestjs/common";
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { HealthModule } from "@/app/health/health.module";
 
 import { LoggerModule } from "@/shared/logger/logger.module";
+import { AuthMiddleware } from "@/shared/middleware/auth.middleware";
+import { CorrelationIdMiddleware } from "@/shared/middleware/correlation-id.middleware";
+import { LoggerMiddleware } from "@/shared/middleware/logger.middleware";
 
 import { AuthModule } from "@/contexts/auth/auth.module";
 import { EventModule } from "@/contexts/events/event.module";
@@ -37,4 +45,21 @@ import { UserModule } from "@/contexts/users/user.module";
     RsvpModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        { path: "auth/login", method: RequestMethod.POST },
+        { path: "auth/login", method: RequestMethod.OPTIONS },
+        { path: "health", method: RequestMethod.GET },
+        { path: "rsvp/(.*)", method: RequestMethod.ALL },
+        { path: "docs/(.*)", method: RequestMethod.ALL },
+        { path: "docs", method: RequestMethod.ALL },
+      )
+      .forRoutes("*");
+
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
+  }
+}
