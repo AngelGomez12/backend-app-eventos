@@ -30,6 +30,14 @@ export class TenantService {
     };
   }
 
+  async findOne(id: string) {
+    const tenant = await this.tenantRepository.findOne({ where: { id } });
+    if (!tenant) {
+      throw new NotFoundException("Tenant not found");
+    }
+    return tenant;
+  }
+
   async getStats() {
     const tenants = await this.tenantRepository.find();
     
