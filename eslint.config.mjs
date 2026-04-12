@@ -17,7 +17,13 @@ const compat = new FlatCompat({
 export default [
   // Equivalent to .eslintignore
   {
-    ignores: ["dist/", "node_modules/", "coverage/"],
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "coverage/",
+      "scripts/*.sh",
+      "src/metadata.ts",
+    ],
   },
   // Load the old .eslintrc configuration
   ...compat.config({

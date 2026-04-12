@@ -21,6 +21,7 @@ export enum TenantStatus {
   TRIAL = "TRIAL",
   ACTIVE = "ACTIVE",
   SUSPENDED = "SUSPENDED",
+  PENDING_PAYMENT = "PENDING_PAYMENT",
 }
 
 @Entity("tenants")
@@ -96,7 +97,7 @@ export class Tenant {
   defaultCurrency: string;
 
   @Column({ type: "jsonb", nullable: true })
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 
   // ==========================================
   // 5. SAAS BILLING & SUBSCRIPTION
@@ -116,6 +117,12 @@ export class Tenant {
 
   @Column({ type: "varchar", nullable: true })
   stripeCustomerId: string;
+
+  @Column({ type: "varchar", nullable: true })
+  mercadoPagoId: string;
+
+  @Column({ type: "varchar", nullable: true })
+  lastPaymentId: string;
 
   @Column({ type: "timestamp", nullable: true })
   subscriptionEndDate: Date;

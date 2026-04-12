@@ -42,10 +42,10 @@ export class User {
   @Column({ nullable: true })
   tenantId: string;
 
-  @ManyToOne("Tenant", (tenant: any) => tenant.users, { nullable: true })
+  @ManyToOne("Tenant", (tenant: Tenant) => tenant.users, { nullable: true })
   @JoinColumn({ name: "tenantId" })
   tenant: Tenant;
 
-  @OneToMany("Event", (event: any) => event.organizer)
+  @OneToMany("Event", (event: Event) => event.organizer)
   events: Event[];
 }

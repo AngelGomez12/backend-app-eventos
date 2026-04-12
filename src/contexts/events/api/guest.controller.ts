@@ -35,15 +35,19 @@ import { CreateGuestDto } from "./dto/create-guest.dto";
 export class GuestController {
   @Get()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "List all guests for an event",
-    description: "Retrieves the guest list for a specific event. Access is restricted to users within the same tenant." 
+    description:
+      "Retrieves the guest list for a specific event. Access is restricted to users within the same tenant.",
   })
-  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
   @ApiOkResponse({ description: "List of guests retrieved successfully." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
   @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  async getGuests(
+  getGuests(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
   ) {
@@ -55,16 +59,19 @@ export class GuestController {
 
   @Post()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Add a new guest",
-    description: "Adds a new guest to the specified event list." 
+    description: "Adds a new guest to the specified event list.",
   })
-  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
   @ApiCreatedResponse({ description: "Guest added successfully." })
   @ApiBadRequestResponse({ description: "Invalid input data." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
   @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  async addGuest(
+  addGuest(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
     @Body() createGuestDto: CreateGuestDto,
@@ -78,16 +85,22 @@ export class GuestController {
 
   @Patch(":guestId")
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Update guest details",
-    description: "Modifies existing guest information." 
+    description: "Modifies existing guest information.",
   })
-  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
-  @ApiParam({ name: "guestId", description: "The unique identifier of the guest (UUID)" })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiParam({
+    name: "guestId",
+    description: "The unique identifier of the guest (UUID)",
+  })
   @ApiOkResponse({ description: "Guest updated successfully." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
   @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  async updateGuest(
+  updateGuest(
     @Param("eventId") eventId: string,
     @Param("guestId") guestId: string,
     @CurrentTenant() tenantId: string,
@@ -102,16 +115,22 @@ export class GuestController {
 
   @Delete(":guestId")
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Remove guest",
-    description: "Deletes a guest from the event list." 
+    description: "Deletes a guest from the event list.",
   })
-  @ApiParam({ name: "eventId", description: "The unique identifier of the event (UUID)" })
-  @ApiParam({ name: "guestId", description: "The unique identifier of the guest (UUID)" })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiParam({
+    name: "guestId",
+    description: "The unique identifier of the guest (UUID)",
+  })
   @ApiOkResponse({ description: "Guest removed successfully." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
   @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  async deleteGuest(
+  deleteGuest(
     @Param("eventId") eventId: string,
     @Param("guestId") guestId: string,
     @CurrentTenant() tenantId: string,

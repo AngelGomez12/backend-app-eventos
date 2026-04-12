@@ -1,7 +1,8 @@
+import type { FastifyReply, FastifyRequest } from "fastify";
+
 import { randomUUID } from "node:crypto";
 
 import { Injectable, NestMiddleware } from "@nestjs/common";
-import type { FastifyRequest, FastifyReply } from "fastify";
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {

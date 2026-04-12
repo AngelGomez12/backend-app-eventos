@@ -33,7 +33,7 @@ async function bootstrap() {
     .getHttpAdapter()
     .getInstance()
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    .register(fastifyCors as any, {
+    .register(fastifyCors, {
       origin: ["http://localhost:3001"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Authorization", "Content-Type"],

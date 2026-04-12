@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Param, Post, Query, UseGuards } from "@nestjs/common";
 import {
-  ApiBearerAuth,
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -16,9 +16,9 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
+import { Tenant, TenantStatus } from "../domain/tenant.entity";
 import { TenantService } from "../domain/tenant.service";
 import { CreateTenantDto } from "./dto/create-tenant.dto";
-import { Tenant } from "../domain/tenant.entity";
 
 @ApiTags("Tenants")
 @ApiBearerAuth()
@@ -29,16 +29,19 @@ export class TenantController {
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "List all tenants",
-    description: "Returns a paginated list of all tenants registered in the system. Restricted to Super Admins." 
+    description:
+      "Returns a paginated list of all tenants registered in the system. Restricted to Super Admins.",
   })
-  @ApiOkResponse({ 
+  @ApiOkResponse({
     description: "List of tenants retrieved successfully.",
-    type: [Tenant]
+    type: [Tenant],
   })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions (Super Admin required)." })
+  @ApiForbiddenResponse({
+    description: "Insufficient permissions (Super Admin required).",
+  })
   @ApiQuery({
     name: "page",
     required: false,
@@ -58,19 +61,51 @@ export class TenantController {
     return this.tenantService.findAll(pageNumber, limitNumber);
   }
 
+  @Get("stats")
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Get tenant statistics for Super Admin dashboard" })
+  async getStats() {
+    return this.tenantService.getStats();
+  }
+
+  @Patch(":id/status")
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Update tenant status (e.g. suspend or activate)" })
+  async updateStatus(
+    @Param("id") id: string,
+    @Body("status") status: TenantStatus
+  ) {
+    return this.tenantService.updateStatus(id, status);
+  }
+
+  @Patch(":id")
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Update tenant data (e.g. limits, branding)" })
+  async updateTenant(
+    @Param("id") id: string,
+    @Body() updateData: Partial<Tenant>
+  ) {
+    return this.tenantService.update(id, updateData);
+  }
+
   @Post()
   @Roles(UserRole.SUPER_ADMIN)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Create a new tenant",
-    description: "Creates a new salon/tenant with its branding, location, and business configuration. Slug is auto-generated if not provided." 
+    description:
+      "Creates a new salon/tenant with its branding, location, and business configuration. Slug is auto-generated if not provided.",
   })
-  @ApiCreatedResponse({ 
+  @ApiCreatedResponse({
     description: "Tenant created successfully.",
-    type: Tenant
+    type: Tenant,
   })
-  @ApiBadRequestResponse({ description: "Invalid input data (validation failed)." })
+  @ApiBadRequestResponse({
+    description: "Invalid input data (validation failed).",
+  })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions (Super Admin required)." })
+  @ApiForbiddenResponse({
+    description: "Insufficient permissions (Super Admin required).",
+  })
   async createTenant(@Body() createTenantDto: CreateTenantDto) {
     const savedTenant = await this.tenantService.create(createTenantDto);
 

@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 
 import { HealthModule } from "@/app/health/health.module";
 
@@ -17,8 +18,13 @@ import { LoggerMiddleware } from "@/shared/middleware/logger.middleware";
 import { AuthModule } from "@/contexts/auth/auth.module";
 import { EventModule } from "@/contexts/events/event.module";
 import { RsvpModule } from "@/contexts/rsvp/rsvp.module";
+import { WebhooksModule } from "@/contexts/shared/webhooks/webhooks.module";
+import { OnboardingModule } from "@/contexts/tenants/onboarding.module";
 import { TenantModule } from "@/contexts/tenants/tenant.module";
 import { UserModule } from "@/contexts/users/user.module";
+import { NotificationModule } from "@/contexts/notifications/notification.module";
+import { AuditModule } from "@/contexts/audit/audit.module";
+import { AuditInterceptor } from "@/contexts/audit/infrastructure/audit.interceptor";
 
 @Module({
   imports: [
@@ -43,6 +49,16 @@ import { UserModule } from "@/contexts/users/user.module";
     UserModule,
     EventModule,
     RsvpModule,
+    OnboardingModule,
+    WebhooksModule,
+    NotificationModule,
+    AuditModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
   ],
 })
 export class AppModule implements NestModule {
@@ -54,6 +70,9 @@ export class AppModule implements NestModule {
         { path: "auth/login", method: RequestMethod.OPTIONS },
         { path: "health", method: RequestMethod.GET },
         { path: "rsvp/(.*)", method: RequestMethod.ALL },
+        { path: "onboarding/(.*)", method: RequestMethod.ALL },
+        { path: "webhooks/(.*)", method: RequestMethod.ALL },
+        { path: "notifications", method: RequestMethod.GET },
         { path: "docs/(.*)", method: RequestMethod.ALL },
         { path: "docs", method: RequestMethod.ALL },
       )

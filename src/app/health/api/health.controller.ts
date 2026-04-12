@@ -8,11 +8,15 @@ export class HealthController {
 
   @Get()
   @HttpCode(200)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Check service health",
-    description: "Returns the current status of the service to verify it is up and running." 
+    description:
+      "Returns the current status of the service to verify it is up and running.",
   })
-  @ApiOkResponse({ description: "Service is healthy.", schema: { example: { status: "ok" } } })
+  @ApiOkResponse({
+    description: "Service is healthy.",
+    schema: { example: { status: "ok" } },
+  })
   run() {
     this.logger.log("Health endpoint called!");
     return { status: "ok" };

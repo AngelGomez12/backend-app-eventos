@@ -25,14 +25,17 @@ import { CreateUserDto } from "./dto/create-user.dto";
 export class UserController {
   @Get()
   @Roles(UserRole.SALON_ADMIN)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "List users for a specific tenant",
-    description: "Retrieves all users belonging to the current tenant. Restricted to Salon Admins." 
+    description:
+      "Retrieves all users belonging to the current tenant. Restricted to Salon Admins.",
   })
   @ApiOkResponse({ description: "List of users retrieved successfully." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions (Salon Admin required)." })
-  async getTenantUsers(@CurrentTenant() tenantId: string) {
+  @ApiForbiddenResponse({
+    description: "Insufficient permissions (Salon Admin required).",
+  })
+  getTenantUsers(@CurrentTenant() tenantId: string) {
     // Return mock since we don't have UserService yet
     return {
       message: "List of users for tenant (Row-Level Security applied).",
@@ -42,15 +45,18 @@ export class UserController {
 
   @Post()
   @Roles(UserRole.SALON_ADMIN)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: "Create a new user inside the tenant",
-    description: "Creates a new user (usually an organizer) associated with the current tenant. Restricted to Salon Admins." 
+    description:
+      "Creates a new user (usually an organizer) associated with the current tenant. Restricted to Salon Admins.",
   })
   @ApiCreatedResponse({ description: "User created successfully." })
   @ApiBadRequestResponse({ description: "Invalid input data." })
   @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions (Salon Admin required)." })
-  async createUser(
+  @ApiForbiddenResponse({
+    description: "Insufficient permissions (Salon Admin required).",
+  })
+  createUser(
     @CurrentTenant() tenantId: string,
     @Body() createUserDto: CreateUserDto,
   ) {

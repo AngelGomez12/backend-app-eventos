@@ -1,5 +1,6 @@
-import { Injectable, NestMiddleware, Logger } from "@nestjs/common";
-import type { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
+
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -7,16 +8,16 @@ export class LoggerMiddleware implements NestMiddleware {
 
   use(req: FastifyRequest["raw"], res: FastifyReply["raw"], next: () => void) {
     const { method, url } = req;
-    const userAgent = req.headers["user-agent"] || "";
+    const userAgent = req.headers["user-agent"] ?? "";
     const startTime = Date.now();
 
     res.on("finish", () => {
       const { statusCode } = res;
-      const contentLength = res.getHeader("content-length") || "";
+      const contentLength = res.getHeader("content-length") ?? "";
       const responseTime = Date.now() - startTime;
 
       this.logger.log(
-        `${method} ${url} ${statusCode} ${contentLength} - ${userAgent} ${responseTime}ms`,
+        `${method} ${url} ${statusCode} ${String(contentLength)} - ${userAgent} ${responseTime}ms`,
       );
     });
 

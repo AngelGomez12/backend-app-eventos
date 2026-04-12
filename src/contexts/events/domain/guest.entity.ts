@@ -32,7 +32,7 @@ export class Guest {
   @Column()
   eventId: string;
 
-  @ManyToOne("Event", (event: any) => event.guests, { onDelete: "CASCADE" })
+  @ManyToOne("Event", (event: Event) => event.guests, { onDelete: "CASCADE" })
   @JoinColumn({ name: "eventId" })
   event: Event;
 }
