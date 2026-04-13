@@ -32,13 +32,10 @@ describe("TenantService", () => {
     it("should generate a slug if not provided", async () => {
       const dto: CreateTenantDto = {
         name: "Salón Los Pinos !!!",
-        // slug no viene
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.create.mockImplementation((d: any) => d as Tenant);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.save.mockImplementation((d: any) =>
+      (repository.create as any).mockImplementation((d: any) => d as Tenant);
+      (repository.save as any).mockImplementation((d: any) =>
         Promise.resolve({ ...d, id: "uuid" } as Tenant),
       );
 
@@ -58,10 +55,8 @@ describe("TenantService", () => {
         slug: "custom-slug-123",
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.create.mockImplementation((d: any) => d as Tenant);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.save.mockImplementation((d: any) =>
+      (repository.create as any).mockImplementation((d: any) => d as Tenant);
+      (repository.save as any).mockImplementation((d: any) =>
         Promise.resolve({ ...d, id: "uuid" } as Tenant),
       );
 
@@ -75,10 +70,8 @@ describe("TenantService", () => {
         name: "  Eventos @ Montevideo & Punta del Este  ",
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.create.mockImplementation((d: any) => d as Tenant);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repository.save.mockImplementation((d: any) =>
+      (repository.create as any).mockImplementation((d: any) => d as Tenant);
+      (repository.save as any).mockImplementation((d: any) =>
         Promise.resolve({ ...d, id: "uuid" } as Tenant),
       );
 

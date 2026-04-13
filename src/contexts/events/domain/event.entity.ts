@@ -2,7 +2,7 @@
 import type { Guest } from "@/contexts/events/domain/guest.entity";
 import type { Tenant } from "@/contexts/tenants/domain/tenant.entity";
 import type { User } from "@/contexts/users/domain/user.entity";
-import { EventPayment } from "./event-payment.entity";
+import type { EventPayment } from "./event-payment.entity";
 
 import {
   Column,
@@ -60,20 +60,20 @@ export class Event {
   @Column()
   tenantId: string;
 
-  @ManyToOne("Tenant", (tenant: Tenant) => tenant.events)
+  @ManyToOne("Tenant", "events")
   @JoinColumn({ name: "tenantId" })
   tenant: Tenant;
 
   @Column()
   organizerId: string;
 
-  @ManyToOne("User", (user: User) => user.events)
+  @ManyToOne("User", "events")
   @JoinColumn({ name: "organizerId" })
   organizer: User;
 
-  @OneToMany("Guest", (guest: Guest) => guest.event)
+  @OneToMany("Guest", "event")
   guests: Guest[];
 
-  @OneToMany(() => EventPayment, (payment) => payment.event)
+  @OneToMany("EventPayment", "event")
   payments: EventPayment[];
 }

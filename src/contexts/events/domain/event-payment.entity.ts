@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Event } from "./event.entity";
+import type { Event } from "./event.entity";
 
 export enum PaymentMethod {
   CASH = "CASH",
@@ -37,7 +37,7 @@ export class EventPayment {
   @Column()
   eventId: string;
 
-  @ManyToOne("Event", (event: Event) => event.payments, { onDelete: "CASCADE" })
+  @ManyToOne("Event", "payments", { onDelete: "CASCADE" })
   @JoinColumn({ name: "eventId" })
   event: Event;
 
