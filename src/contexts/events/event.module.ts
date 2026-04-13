@@ -5,10 +5,13 @@ import { EventController } from "./api/event.controller";
 import { GuestController } from "./api/guest.controller";
 import { Event } from "./domain/event.entity";
 import { Guest } from "./domain/guest.entity";
+import { EventPayment } from "./domain/event-payment.entity";
+import { EventService } from "./domain/event.service";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, Guest])],
+  imports: [TypeOrmModule.forFeature([Event, Guest, EventPayment])],
   controllers: [EventController, GuestController],
-  exports: [TypeOrmModule],
+  providers: [EventService],
+  exports: [TypeOrmModule, EventService],
 })
 export class EventModule {}

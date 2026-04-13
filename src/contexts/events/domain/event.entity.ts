@@ -2,6 +2,7 @@
 import type { Guest } from "@/contexts/events/domain/guest.entity";
 import type { Tenant } from "@/contexts/tenants/domain/tenant.entity";
 import type { User } from "@/contexts/users/domain/user.entity";
+import { EventPayment } from "./event-payment.entity";
 
 import {
   Column,
@@ -53,6 +54,9 @@ export class Event {
   @Column({ type: "int", nullable: true })
   approximateGuestCount: number;
 
+  @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
+  basePrice: number;
+
   @Column()
   tenantId: string;
 
@@ -69,4 +73,7 @@ export class Event {
 
   @OneToMany("Guest", (guest: Guest) => guest.event)
   guests: Guest[];
+
+  @OneToMany(() => EventPayment, (payment) => payment.event)
+  payments: EventPayment[];
 }

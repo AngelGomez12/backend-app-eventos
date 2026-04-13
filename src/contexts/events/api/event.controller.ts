@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -28,12 +29,17 @@ import { UserRole } from "@/contexts/users/domain/user.entity";
 
 import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventStatusDto } from "./dto/update-event-status.dto";
+import { CreateEventPaymentDto } from "./dto/create-event-payment.dto";
+import { UpdateEventPriceDto } from "./dto/update-event-price.dto";
+import { EventService } from "../domain/event.service";
 
 @ApiTags("Events")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("events")
 export class EventController {
+  constructor(private readonly eventService: EventService) {}
+
   @Get()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
@@ -41,16 +47,8 @@ export class EventController {
     description:
       "Retrieves events associated with the current tenant. Organizers see only their own events, while Salon Admins see all events in the tenant.",
   })
-  @ApiOkResponse({ description: "List of events retrieved successfully." })
-  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  getEvents(@CurrentTenant() tenantId: string, @CurrentUser() user: unknown) {
-    return {
-      message:
-        "Listing events. If Organizer, only their events. If Admin, all tenant events.",
-      tenantId,
-      userRole: (user as { role: UserRole }).role,
-    };
+  async getEvents(@CurrentTenant() tenantId: string, @CurrentUser() user: any) {
+    return this.eventService.findAll(tenantId, user);
   }
 
   @Get(":id")
@@ -64,15 +62,8 @@ export class EventController {
     name: "id",
     description: "The unique identifier of the event (UUID)",
   })
-  @ApiOkResponse({ description: "Event details retrieved successfully." })
-  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({
-    description: "Insufficient permissions or access to another tenant's data.",
-  })
-  getEventById(@Param("id") id: string, @CurrentTenant() tenantId: string) {
-    return {
-      message: `Details for event ${id} ensuring it belongs to tenant ${tenantId}`,
-    };
+  async getEventById(@Param("id") id: string, @CurrentTenant() tenantId: string) {
+    return this.eventService.findOne(id, tenantId);
   }
 
   @Post()
@@ -81,44 +72,54 @@ export class EventController {
     summary: "Create a new event",
     description: "Registers a new event within the current tenant.",
   })
-  @ApiCreatedResponse({ description: "Event created successfully." })
-  @ApiBadRequestResponse({ description: "Invalid input data." })
-  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  createEvent(
+  async createEvent(
     @CurrentTenant() tenantId: string,
     @Body() createEventDto: CreateEventDto,
   ) {
-    return {
-      message: "Event created successfully.",
-      tenantId,
-      event: createEventDto,
-    };
+    return this.eventService.create(tenantId, createEventDto);
   }
 
   @Patch(":id/status")
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
-  @ApiOperation({
-    summary: "Update event status",
-    description:
-      "Changes the status (e.g., from Pending to Confirmed) of a specific event.",
-  })
-  @ApiParam({
-    name: "id",
-    description: "The unique identifier of the event (UUID)",
-  })
-  @ApiOkResponse({ description: "Event status updated successfully." })
-  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
-  @ApiForbiddenResponse({ description: "Insufficient permissions." })
-  updateEventStatus(
+  @ApiOperation({ summary: "Update event status" })
+  async updateEventStatus(
     @Param("id") id: string,
     @CurrentTenant() tenantId: string,
     @Body() updateEventStatusDto: UpdateEventStatusDto,
   ) {
-    return {
-      message: `Event ${id} status updated.`,
-      tenantId,
-      newStatus: updateEventStatusDto.status,
-    };
+    return this.eventService.updateStatus(id, tenantId, updateEventStatusDto);
+  }
+
+  @Patch(":id/price")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({ summary: "Update base price for an event" })
+  async updateEventPrice(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+    @Body() updateEventPriceDto: UpdateEventPriceDto,
+  ) {
+    return this.eventService.updatePrice(id, tenantId, updateEventPriceDto);
+  }
+
+  @Post(":id/payments")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({ summary: "Register a new payment for the event" })
+  async addPayment(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+    @Body() createPaymentDto: CreateEventPaymentDto,
+  ) {
+    return this.eventService.addPayment(id, tenantId, createPaymentDto);
+  }
+
+  @Delete(":id/payments/:paymentId")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({ summary: "Remove a registered payment" })
+  async removePayment(
+    @Param("id") id: string,
+    @Param("paymentId") paymentId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.eventService.removePayment(id, paymentId, tenantId);
   }
 }

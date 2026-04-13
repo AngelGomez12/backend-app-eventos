@@ -15,21 +15,21 @@ export class AuditLog {
   tenantId: string;
 
   @Column()
-  action: string; // e.g., "CREATE", "UPDATE", "DELETE", "LOGIN", "IMPERSONATE"
+  action: string;
 
   @Column()
-  entity: string; // e.g., "Tenant", "Event", "User", "Notification"
+  entity: string;
 
   @Column({ nullable: true })
   entityId: string;
 
   @Column({ type: "jsonb", nullable: true })
-  payload: any; // Request body or relevant data
+  payload: any;
 
   @Column({ nullable: true })
   ipAddress: string;
 
-  @Column({ nullable: true })
+  @Column({ type: "text", nullable: true })
   userAgent: string;
 
   @CreateDateColumn()

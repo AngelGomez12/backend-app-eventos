@@ -37,7 +37,7 @@ export class Tenant {
 
   @Index({ unique: true })
   @Column({ type: "varchar", unique: true, nullable: true })
-  slug: string; // Ej: los-pinos
+  slug: string;
 
   @Column({ type: "varchar", unique: true, nullable: true })
   customDomain: string;
@@ -48,7 +48,7 @@ export class Tenant {
   @Column({ type: "varchar", nullable: true })
   faviconUrl: string;
 
-  @Column({ type: "varchar", length: 7, default: "#4F46E5" })
+  @Column({ type: "varchar", length: 7, default: "#4F46E5", nullable: true })
   primaryColor: string;
 
   // ==========================================
@@ -79,7 +79,7 @@ export class Tenant {
   contactEmail: string;
 
   @Column({ type: "jsonb", nullable: true })
-  socialLinks: Record<string, string>; // { instagram: '...', tiktok: '...' }
+  socialLinks: Record<string, string>;
 
   @Column({ type: "varchar", nullable: true })
   website: string;

@@ -13,25 +13,22 @@ export class AuditInterceptor implements NestInterceptor {
   constructor(private readonly auditLogService: AuditLogService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    // Si no es una petición HTTP (ej: WebSockets), lo ignoramos
     if (context.getType() !== "http") {
       return next.handle();
     }
 
     const request = context.switchToHttp().getRequest();
-    const { method, url, body, user, ip } = request;
+    const { method, url, body, ip } = request;
     
-    // Usamos headers directamente para evitar el error .get() si no es Express
-    const userAgent = request.headers ? request.headers["user-agent"] : null;
+    // Aseguramos que userAgent sea un string
+    const rawUserAgent = request.headers ? request.headers["user-agent"] : null;
+    const userAgent = Array.isArray(rawUserAgent) ? rawUserAgent.join(", ") : rawUserAgent;
 
-    // Solo logueamos mutaciones (POST, PATCH, DELETE, PUT)
     const monitoredMethods = ["POST", "PATCH", "DELETE", "PUT"];
-    
     if (!monitoredMethods.includes(method)) {
       return next.handle();
     }
 
-    // Excluimos algunas rutas sensibles o ruidosas si es necesario
     const excludedPaths = ["/auth/login", "/health"];
     if (excludedPaths.some(path => url.includes(path))) {
       return next.handle();
@@ -39,15 +36,13 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
-        // Determinamos la entidad basándonos en la URL (simplificado)
-        const pathSegments = url.split("/").filter((s: string) => s);
+        const user = request.user;
+        const pathSegments = url.split("?")[0].split("/").filter((s: string) => s);
         const entity = pathSegments[0] || "Unknown";
-        
-        // El ID de la entidad suele ser el segundo segmento si es un UUID o número
         const entityId = pathSegments[1] && pathSegments[1].length > 10 ? pathSegments[1] : null;
 
         this.auditLogService.create({
-          userId: user?.sub || user?.id,
+          userId: user?.sub || user?.id || user?.userId,
           userEmail: user?.email,
           tenantId: user?.tenantId,
           action: method,
@@ -55,7 +50,7 @@ export class AuditInterceptor implements NestInterceptor {
           entityId,
           payload: method !== "DELETE" ? body : null,
           ipAddress: ip,
-          userAgent,
+          userAgent: userAgent || null,
         }).catch(err => console.error("Error saving audit log:", err));
       }),
     );
