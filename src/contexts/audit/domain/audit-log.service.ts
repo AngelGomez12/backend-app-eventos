@@ -33,10 +33,22 @@ export class AuditLogService {
     };
   }
 
-  async findByTenant(tenantId: string) {
-    return this.auditLogRepository.find({
+  async findByTenant(tenantId: string, page = 1, limit = 10) {
+    const [data, total] = await this.auditLogRepository.findAndCount({
       where: { tenantId },
+      skip: (page - 1) * limit,
+      take: limit,
       order: { createdAt: "DESC" },
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
