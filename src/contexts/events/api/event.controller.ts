@@ -31,6 +31,7 @@ import { CreateEventDto } from "./dto/create-event.dto";
 import { UpdateEventStatusDto } from "./dto/update-event-status.dto";
 import { CreateEventPaymentDto } from "./dto/create-event-payment.dto";
 import { UpdateEventPriceDto } from "./dto/update-event-price.dto";
+import { UpdateTableLimitDto } from "./dto/update-table-limit.dto";
 import { EventService } from "../domain/event.service";
 
 @ApiTags("Events")
@@ -93,7 +94,7 @@ export class EventController {
   @Patch(":id/price")
   @Roles(UserRole.SALON_ADMIN)
   @ApiOperation({ summary: "Update base price for an event" })
-  async updateEventPrice(
+  async updatePrice(
     @Param("id") id: string,
     @CurrentTenant() tenantId: string,
     @Body() updateEventPriceDto: UpdateEventPriceDto,
@@ -101,7 +102,19 @@ export class EventController {
     return this.eventService.updatePrice(id, tenantId, updateEventPriceDto);
   }
 
+  @Patch(":id/table-limit")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({ summary: "Update event maximum table limit" })
+  async updateTableLimit(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+    @Body() updateTableLimitDto: UpdateTableLimitDto,
+  ) {
+    return this.eventService.updateTableLimit(id, tenantId, updateTableLimitDto);
+  }
+
   @Post(":id/payments")
+
   @Roles(UserRole.SALON_ADMIN)
   @ApiOperation({ summary: "Register a new payment for the event" })
   async addPayment(

@@ -27,12 +27,16 @@ import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
 import { CreateGuestDto } from "./dto/create-guest.dto";
+import { UpdateGuestDto } from "./dto/update-guest.dto";
+import { GuestService } from "../domain/guest.service";
 
 @ApiTags("Guests")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("events/:eventId/guests")
 export class GuestController {
+  constructor(private readonly guestService: GuestService) {}
+
   @Get()
   @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
   @ApiOperation({
@@ -51,10 +55,7 @@ export class GuestController {
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
   ) {
-    return {
-      message: `Fetching guests for event ${eventId}`,
-      tenantId,
-    };
+    return this.guestService.findAll(tenantId, eventId);
   }
 
   @Post()
@@ -76,11 +77,7 @@ export class GuestController {
     @CurrentTenant() tenantId: string,
     @Body() createGuestDto: CreateGuestDto,
   ) {
-    return {
-      message: `Added guest to event ${eventId}`,
-      tenantId,
-      guest: createGuestDto,
-    };
+    return this.guestService.create(tenantId, eventId, createGuestDto);
   }
 
   @Patch(":guestId")
@@ -104,13 +101,9 @@ export class GuestController {
     @Param("eventId") eventId: string,
     @Param("guestId") guestId: string,
     @CurrentTenant() tenantId: string,
-    @Body() updateDto: Partial<CreateGuestDto>,
+    @Body() updateDto: UpdateGuestDto,
   ) {
-    return {
-      message: `Updated guest ${guestId} in event ${eventId}`,
-      tenantId,
-      updates: updateDto,
-    };
+    return this.guestService.update(tenantId, eventId, guestId, updateDto);
   }
 
   @Delete(":guestId")
@@ -135,9 +128,6 @@ export class GuestController {
     @Param("guestId") guestId: string,
     @CurrentTenant() tenantId: string,
   ) {
-    return {
-      message: `Deleted guest ${guestId} from event ${eventId}`,
-      tenantId,
-    };
+    return this.guestService.remove(tenantId, eventId, guestId);
   }
 }

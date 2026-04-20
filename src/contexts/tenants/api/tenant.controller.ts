@@ -72,6 +72,20 @@ export class TenantController {
     return this.tenantService.getStats();
   }
 
+  @Get(":id")
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Get tenant details by ID" })
+  async getById(@Param("id") id: string) {
+    return this.tenantService.findOne(id);
+  }
+
+  @Get(":id/payments")
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: "Get tenant payment history" })
+  async getPayments(@Param("id") id: string) {
+    return this.tenantService.findPayments(id);
+  }
+
   @Patch(":id/status")
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: "Update tenant status" })

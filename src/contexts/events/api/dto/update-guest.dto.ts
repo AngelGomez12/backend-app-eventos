@@ -1,13 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
-
+import { IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 import { AttendanceStatus } from "../../domain/guest.entity";
 
-export class CreateGuestDto {
-  @ApiProperty({ example: "John Doe" })
+export class UpdateGuestDto {
+  @ApiProperty({ example: "John Doe", required: false })
   @IsString()
-  @IsNotEmpty()
-  fullName: string;
+  @IsOptional()
+  fullName?: string;
 
   @ApiProperty({
     enum: AttendanceStatus,
@@ -27,4 +26,9 @@ export class CreateGuestDto {
   @IsString()
   @IsOptional()
   dietaryRestrictions?: string;
+
+  @ApiProperty({ example: "uuid-of-table", required: false })
+  @IsUUID()
+  @IsOptional()
+  tableId?: string;
 }

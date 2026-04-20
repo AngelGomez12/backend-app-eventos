@@ -4,12 +4,15 @@ import { Repository } from "typeorm";
 
 import { CreateTenantDto } from "../api/dto/create-tenant.dto";
 import { Tenant, TenantStatus, SubscriptionPlan } from "./tenant.entity";
+import { TenantPayment } from "./payment.entity";
 
 @Injectable()
 export class TenantService {
   constructor(
     @InjectRepository(Tenant)
     private readonly tenantRepository: Repository<Tenant>,
+    @InjectRepository(TenantPayment)
+    private readonly paymentRepository: Repository<TenantPayment>,
   ) {}
 
   async findAll(page: number, limit: number) {
@@ -36,6 +39,53 @@ export class TenantService {
       throw new NotFoundException("Tenant not found");
     }
     return tenant;
+  }
+
+  async findPayments(tenantId: string) {
+    return this.paymentRepository.find({
+      where: { tenantId },
+      order: { paymentDate: "DESC" },
+    });
+  }
+
+  async recordPayment(
+    tenantId: string,
+    paymentData: {
+      amount: number;
+      currency: string;
+      externalPaymentId: string;
+      plan: SubscriptionPlan;
+    },
+  ) {
+    // 1. Idempotency check
+    const existing = await this.paymentRepository.findOne({
+      where: { externalPaymentId: paymentData.externalPaymentId },
+    });
+
+    if (existing) {
+      return;
+    }
+
+    // 2. Find and update tenant
+    const tenant = await this.findOne(tenantId);
+
+    tenant.status = TenantStatus.ACTIVE;
+    tenant.isActive = true;
+    tenant.lastPaymentId = paymentData.externalPaymentId;
+
+    // Add 30 days to subscription
+    const now = new Date();
+    tenant.subscriptionEndDate = new Date(now.setDate(now.getDate() + 30));
+
+    await this.tenantRepository.save(tenant);
+
+    // 3. Create payment record
+    const payment = this.paymentRepository.create({
+      ...paymentData,
+      tenantId,
+    });
+
+    return this.paymentRepository.save(payment);
   }
 
   async getStats() {
