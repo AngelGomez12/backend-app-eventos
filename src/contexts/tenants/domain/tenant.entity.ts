@@ -146,6 +146,9 @@ export class Tenant {
   @OneToMany(() => Event, (event: Event) => event.tenant)
   events: Event[];
 
+  @OneToMany("TenantPayment", (payment: any) => payment.tenant)
+  payments: any[];
+
   @CreateDateColumn()
   createdAt: Date;
 

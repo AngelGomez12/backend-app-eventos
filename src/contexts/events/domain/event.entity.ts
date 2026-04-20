@@ -1,8 +1,10 @@
 /* eslint-disable node/no-extraneous-import */
 import type { Guest } from "@/contexts/events/domain/guest.entity";
+import type { Table } from "@/contexts/events/domain/table.entity";
 import type { Tenant } from "@/contexts/tenants/domain/tenant.entity";
 import type { User } from "@/contexts/users/domain/user.entity";
 import type { EventPayment } from "./event-payment.entity";
+import type { EventMovement } from "./movement.entity";
 
 import {
   Column,
@@ -57,6 +59,9 @@ export class Event {
   @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
   basePrice: number;
 
+  @Column({ type: "int", default: 0 })
+  maxTableCount: number;
+
   @Column()
   tenantId: string;
 
@@ -74,6 +79,12 @@ export class Event {
   @OneToMany("Guest", "event")
   guests: Guest[];
 
+  @OneToMany("Table", "event")
+  tables: Table[];
+
   @OneToMany("EventPayment", "event")
   payments: EventPayment[];
+
+  @OneToMany("EventMovement", "event")
+  movements: EventMovement[];
 }

@@ -5,15 +5,18 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
 import { CreateTenantDto } from "@/contexts/tenants/api/dto/create-tenant.dto";
-import { Tenant } from "@/contexts/tenants/domain/tenant.entity";
+import { Tenant, TenantStatus, SubscriptionPlan } from "@/contexts/tenants/domain/tenant.entity";
+import { TenantPayment } from "@/contexts/tenants/domain/payment.entity";
 import { TenantService } from "@/contexts/tenants/domain/tenant.service";
 
 describe("TenantService", () => {
   let service: TenantService;
   let repository: DeepMockProxy<Repository<Tenant>>;
+  let paymentRepository: DeepMockProxy<Repository<TenantPayment>>;
 
   beforeEach(async () => {
     repository = mockDeep<Repository<Tenant>>();
+    paymentRepository = mockDeep<Repository<TenantPayment>>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -22,10 +25,70 @@ describe("TenantService", () => {
           provide: getRepositoryToken(Tenant),
           useValue: repository,
         },
+        {
+          provide: getRepositoryToken(TenantPayment),
+          useValue: paymentRepository,
+        },
       ],
     }).compile();
 
     service = module.get<TenantService>(TenantService);
+  });
+
+  describe("recordPayment", () => {
+    it("should update tenant and create payment record", async () => {
+      const tenantId = "tenant-1";
+      const paymentData = {
+        amount: 5000,
+        currency: "UYU",
+        externalPaymentId: "MP-123",
+        plan: SubscriptionPlan.PREMIUM,
+      };
+
+      const tenant = { id: tenantId, status: TenantStatus.PENDING_PAYMENT } as Tenant;
+      repository.findOne.mockResolvedValue(tenant);
+      paymentRepository.findOne.mockResolvedValue(null); // Not a duplicate
+      
+      (paymentRepository.create as any).mockImplementation((d: any) => d as TenantPayment);
+      (paymentRepository.save as any).mockImplementation((d: any) => Promise.resolve({ ...d, id: "pay-1" } as TenantPayment));
+
+      const result = await service.recordPayment(tenantId, paymentData);
+
+      expect(tenant.status).toBe(TenantStatus.ACTIVE);
+      expect(tenant.lastPaymentId).toBe("MP-123");
+      expect(repository.save).toHaveBeenCalledWith(tenant);
+      expect(paymentRepository.save).toHaveBeenCalled();
+      expect(result?.externalPaymentId).toBe("MP-123");
+    });
+
+    it("should skip if payment already exists (idempotency)", async () => {
+      const tenantId = "tenant-1";
+      const paymentData = { externalPaymentId: "MP-123" } as any;
+
+      paymentRepository.findOne.mockResolvedValue({ id: "existing" } as TenantPayment);
+
+      const result = await service.recordPayment(tenantId, paymentData);
+
+      expect(result).toBeUndefined();
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("findPayments", () => {
+    it("should return history for a tenant", async () => {
+      const tenantId = "tenant-1";
+      paymentRepository.find.mockResolvedValue([{ id: "pay-1" }] as TenantPayment[]);
+
+      const result = await service.findPayments(tenantId);
+
+      expect(result).toHaveLength(1);
+      expect(paymentRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId },
+          order: { paymentDate: "DESC" },
+        }),
+      );
+    });
   });
 
   describe("create", () => {

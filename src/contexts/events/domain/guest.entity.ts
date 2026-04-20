@@ -1,4 +1,5 @@
 import type { Event } from "@/contexts/events/domain/event.entity";
+import type { Table } from "@/contexts/events/domain/table.entity";
 
 import {
   Column,
@@ -29,10 +30,23 @@ export class Guest {
   })
   attendanceStatus: AttendanceStatus;
 
+  @Column({ nullable: true })
+  phone?: string;
+
+  @Column({ nullable: true })
+  dietaryRestrictions?: string;
+
   @Column()
   eventId: string;
 
   @ManyToOne("Event", (event: Event) => event.guests, { onDelete: "CASCADE" })
   @JoinColumn({ name: "eventId" })
   event: Event;
+
+  @Column({ nullable: true })
+  tableId?: string;
+
+  @ManyToOne("Table", (table: Table) => table.guests, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "tableId" })
+  table?: Table;
 }

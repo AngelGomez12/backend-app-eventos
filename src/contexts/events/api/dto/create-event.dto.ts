@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsPositive,
   IsString,
 } from "class-validator";
@@ -28,6 +29,12 @@ export class CreateEventDto {
   @IsInt()
   @IsPositive()
   approximateGuestCount: number;
+
+  @ApiProperty({ example: 10, required: false })
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  maxTableCount?: number;
 
   @ApiProperty({ description: "User ID of the organizer" })
   @IsString()
