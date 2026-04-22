@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -25,8 +26,9 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
-import { CreateTableDto } from "./dto/create-table.dto";
 import { TableService } from "../domain/table.service";
+import { CreateTableDto } from "./dto/create-table.dto";
+import { FilterTableDto } from "./dto/filter-table.dto";
 
 @ApiTags("Tables")
 @ApiBearerAuth()
@@ -50,8 +52,14 @@ export class TableController {
   getTables(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
+    @Query() filterDto: FilterTableDto,
   ) {
-    return this.tableService.findAll(tenantId, eventId);
+    return this.tableService.findAll(
+      tenantId,
+      eventId,
+      filterDto.page,
+      filterDto.limit,
+    );
   }
 
   @Post()

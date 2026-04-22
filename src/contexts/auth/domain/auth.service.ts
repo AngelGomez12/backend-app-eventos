@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, UnauthorizedException, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
@@ -24,13 +29,13 @@ export class AuthService {
 
     if (user && (await bcrypt.compare(pass, user.passwordHash))) {
       // Bloqueo por pago pendiente
-      if (user.tenant?.status === TenantStatus.PENDING_PAYMENT) {
+      if (user.tenant.status === TenantStatus.PENDING_PAYMENT) {
         throw new ForbiddenException(
           "Account pending payment. Please complete your subscription payment.",
         );
       }
       // Bloqueo por cuenta suspendida
-      if (user.tenant?.status === TenantStatus.SUSPENDED) {
+      if (user.tenant.status === TenantStatus.SUSPENDED) {
         throw new ForbiddenException(
           "Account suspended. Please contact support.",
         );

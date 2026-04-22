@@ -8,11 +8,14 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 
+import { RsvpService } from "../domain/rsvp.service";
 import { ConfirmRsvpDto } from "./dto/confirm-rsvp.dto";
 
 @ApiTags("RSVP (Public)")
 @Controller("rsvp")
 export class RsvpController {
+  constructor(private readonly rsvpService: RsvpService) {}
+
   @Get(":token")
   @ApiOperation({
     summary: "Get invitation details (Public)",
@@ -28,9 +31,7 @@ export class RsvpController {
     description: "Token not found or invitation expired.",
   })
   getInvitation(@Param("token") token: string) {
-    return {
-      message: `Invitation data for token: ${token}`,
-    };
+    return this.rsvpService.getInvitation(token);
   }
 
   @Post(":token/confirm")
@@ -52,9 +53,6 @@ export class RsvpController {
     @Param("token") token: string,
     @Body() confirmDto: ConfirmRsvpDto,
   ) {
-    return {
-      message: `RSVP updated for token: ${token}`,
-      newStatus: confirmDto.attendanceStatus,
-    };
+    return this.rsvpService.confirmRsvp(token, confirmDto);
   }
 }

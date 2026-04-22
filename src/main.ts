@@ -10,8 +10,8 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "@/app/app.module";
 
-import { TransformInterceptor } from "@/shared/interceptors/transform.interceptor";
 import { HttpExceptionFilter } from "@/shared/filters/http-exception.filter";
+import { TransformInterceptor } from "@/shared/interceptors/transform.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -30,13 +30,23 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // Configuración CORS
+  // Configuración CORS dinámica para desarrollo, ngrok e IP local
   await app
     .getHttpAdapter()
     .getInstance()
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     .register(fastifyCors, {
-      origin: ["http://localhost:3001"],
+      origin: (origin, cb) => {
+        // En desarrollo permitimos: localhost, ngrok y cualquier IP de red local (192.168.x.x o 10.x.x.x)
+        if (!origin || 
+            origin === "http://localhost:3001" || 
+            origin.endsWith(".ngrok-free.dev") ||
+            /^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(origin)) {
+          cb(null, true);
+          return;
+        }
+        cb(new Error("Not allowed by CORS"), false);
+      },
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Authorization", "Content-Type"],
       credentials: true,

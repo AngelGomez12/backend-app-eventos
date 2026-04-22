@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -26,9 +27,10 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
-import { CreateGuestDto } from "./dto/create-guest.dto";
-import { UpdateGuestDto } from "./dto/update-guest.dto";
 import { GuestService } from "../domain/guest.service";
+import { CreateGuestDto } from "./dto/create-guest.dto";
+import { FilterGuestDto } from "./dto/filter-guest.dto";
+import { UpdateGuestDto } from "./dto/update-guest.dto";
 
 @ApiTags("Guests")
 @ApiBearerAuth()
@@ -54,8 +56,15 @@ export class GuestController {
   getGuests(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
+    @Query() filterDto: FilterGuestDto,
   ) {
-    return this.guestService.findAll(tenantId, eventId);
+    return this.guestService.findAll(
+      tenantId,
+      eventId,
+      filterDto.page,
+      filterDto.limit,
+      filterDto.search,
+    );
   }
 
   @Post()

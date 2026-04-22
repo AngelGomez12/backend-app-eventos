@@ -1,3 +1,5 @@
+import type { Event } from "./event.entity";
+
 import {
   Column,
   CreateDateColumn,
@@ -6,7 +8,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import type { Event } from "./event.entity";
 
 export enum MovementType {
   INCOME = "INCOME",

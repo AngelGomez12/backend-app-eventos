@@ -1,6 +1,7 @@
-import { CreateTableDto } from "@/contexts/events/api/dto/create-table.dto";
-import { describe, expect, it } from "vitest";
 import { validate } from "class-validator";
+import { describe, expect, it } from "vitest";
+
+import { CreateTableDto } from "@/contexts/events/api/dto/create-table.dto";
 
 describe("CreateTableDto", () => {
   it("should validate a correct DTO", async () => {

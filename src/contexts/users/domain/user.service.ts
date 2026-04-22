@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
-import { User, UserRole } from "./user.entity";
+import { Repository } from "typeorm";
+
+import { PaginatedResponse } from "@/contexts/shared/domain/pagination.interface";
+
 import { CreateUserDto } from "../api/dto/create-user.dto";
+import { User, UserRole } from "./user.entity";
 
 @Injectable()
 export class UserService {
@@ -12,11 +19,27 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findAll(tenantId: string) {
-    return this.userRepository.find({
+  async findAll(
+    tenantId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<User>> {
+    const [data, total] = await this.userRepository.findAndCount({
       where: { tenantId },
       order: { fullName: "ASC" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string, tenantId: string) {

@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
+
 import { AttendanceStatus } from "../../domain/guest.entity";
 
 export class UpdateGuestDto {

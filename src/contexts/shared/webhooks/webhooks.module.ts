@@ -6,10 +6,7 @@ import { TenantModule } from "@/contexts/tenants/tenant.module";
 import { MercadoPagoWebhookController } from "./api/mercadopago.controller";
 
 @Module({
-  imports: [
-    TenantModule,
-    ConfigModule,
-  ],
+  imports: [TenantModule, ConfigModule],
   controllers: [MercadoPagoWebhookController],
   providers: [],
 })

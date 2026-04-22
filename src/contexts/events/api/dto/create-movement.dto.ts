@@ -1,5 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+} from "class-validator";
+
 import { MovementType } from "../../domain/movement.entity";
 
 export class CreateMovementDto {
@@ -8,7 +16,7 @@ export class CreateMovementDto {
   @IsNotEmpty()
   concept: string;
 
-  @ApiProperty({ example: 1500.50 })
+  @ApiProperty({ example: 1500.5 })
   @IsNumber()
   @IsPositive()
   amount: number;

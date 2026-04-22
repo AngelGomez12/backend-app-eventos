@@ -6,7 +6,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
-import { MercadoPagoConfig, Preference, Payment } from "mercadopago";
+import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 import { DataSource, Repository } from "typeorm";
 
 import { User, UserRole } from "@/contexts/users/domain/user.entity";
@@ -81,7 +81,7 @@ export class OnboardingService {
       relations: ["tenant"],
     });
 
-    if (!user || !user.tenant) {
+    if (!user?.tenant) {
       throw new NotFoundException("User or tenant not found");
     }
 

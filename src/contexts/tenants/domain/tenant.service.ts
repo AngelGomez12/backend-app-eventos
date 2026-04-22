@@ -1,10 +1,14 @@
+// eslint-disable-next-line simple-import-sort/imports
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { ILike, Repository } from "typeorm";
+
+import { PaginatedResponse } from "@/contexts/shared/domain/pagination.interface";
 
 import { CreateTenantDto } from "../api/dto/create-tenant.dto";
-import { Tenant, TenantStatus, SubscriptionPlan } from "./tenant.entity";
 import { TenantPayment } from "./payment.entity";
+import { SubscriptionPlan, Tenant, TenantStatus } from "./tenant.entity";
+import { FilterTenantDto } from "../api/dto/filter-tenant.dto";
 
 @Injectable()
 export class TenantService {
@@ -15,12 +19,24 @@ export class TenantService {
     private readonly paymentRepository: Repository<TenantPayment>,
   ) {}
 
-  async findAll(page: number, limit: number) {
-    const [data, total] = await this.tenantRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { name: "ASC" },
-    });
+  async findAll(filters: FilterTenantDto): Promise<PaginatedResponse<Tenant>> {
+    const { page = 1, limit = 10 } = filters;
+
+    const queryBuilder = this.tenantRepository
+      .createQueryBuilder("tenant")
+      .leftJoinAndSelect("tenant.payments", "payment")
+      .orderBy("tenant.createdAt", "DESC")
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (filters.search) {
+      queryBuilder.andWhere(
+        "tenant.name ILIKE :search OR tenant.slug ILIKE :search",
+        { search: `%${filters.search}%` },
+      );
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
       data,
@@ -41,11 +57,26 @@ export class TenantService {
     return tenant;
   }
 
-  async findPayments(tenantId: string) {
-    return this.paymentRepository.find({
+  async findPayments(
+    tenantId: string,
+    filters: FilterTenantDto,
+  ): Promise<PaginatedResponse<TenantPayment>> {
+    const [data, total] = await this.paymentRepository.findAndCount({
       where: { tenantId },
       order: { paymentDate: "DESC" },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(total / filters.limit),
+      },
+    };
   }
 
   async recordPayment(
@@ -90,17 +121,24 @@ export class TenantService {
 
   async getStats() {
     const tenants = await this.tenantRepository.find();
-    
+
     const totalTenants = tenants.length;
-    const activeTenants = tenants.filter(t => t.status === TenantStatus.ACTIVE).length;
-    const pendingTenants = tenants.filter(t => t.status === TenantStatus.PENDING_PAYMENT).length;
-    const suspendedTenants = tenants.filter(t => t.status === TenantStatus.SUSPENDED).length;
+    const activeTenants = tenants.filter(
+      t => t.status === TenantStatus.ACTIVE,
+    ).length;
+    const pendingTenants = tenants.filter(
+      t => t.status === TenantStatus.PENDING_PAYMENT,
+    ).length;
+    const suspendedTenants = tenants.filter(
+      t => t.status === TenantStatus.SUSPENDED,
+    ).length;
 
     const mrr = tenants
       .filter(t => t.status === TenantStatus.ACTIVE)
       .reduce((sum, t) => {
         if (t.subscriptionPlan === SubscriptionPlan.PREMIUM) return sum + 5000;
-        if (t.subscriptionPlan === SubscriptionPlan.ENTERPRISE) return sum + 10000;
+        if (t.subscriptionPlan === SubscriptionPlan.ENTERPRISE)
+          return sum + 10_000;
         return sum;
       }, 0);
 
@@ -109,7 +147,7 @@ export class TenantService {
       activeTenants,
       pendingTenants,
       suspendedTenants,
-      mrr
+      mrr,
     };
   }
 
@@ -118,10 +156,10 @@ export class TenantService {
     if (!tenant) {
       throw new NotFoundException("Tenant not found");
     }
-    
+
     tenant.status = status;
     tenant.isActive = status === TenantStatus.ACTIVE;
-    
+
     return this.tenantRepository.save(tenant);
   }
 
@@ -130,9 +168,9 @@ export class TenantService {
     if (!tenant) {
       throw new NotFoundException("Tenant not found");
     }
-    
+
     Object.assign(tenant, updateData);
-    
+
     return this.tenantRepository.save(tenant);
   }
 
@@ -152,11 +190,11 @@ export class TenantService {
   private generateSlug(text: string): string {
     return text
       .normalize("NFD")
-      .replace(/[\u0300-\u036F]/g, "")
+      .replaceAll(/[\u0300-\u036F]/g, "")
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replaceAll(/[^\w\s-]/g, "")
+      .replaceAll(/[\s_-]+/g, "-")
+      .replaceAll(/^-+|-+$/g, "");
   }
 }

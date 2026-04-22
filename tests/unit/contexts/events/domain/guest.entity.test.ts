@@ -1,5 +1,6 @@
-import { AttendanceStatus, Guest } from "@/contexts/events/domain/guest.entity";
 import { describe, expect, it } from "vitest";
+
+import { AttendanceStatus, Guest } from "@/contexts/events/domain/guest.entity";
 
 describe("Guest Entity", () => {
   it("should have phone, dietaryRestrictions and tableId properties", () => {
@@ -8,7 +9,7 @@ describe("Guest Entity", () => {
     guest.fullName = "Jane Doe";
     guest.attendanceStatus = AttendanceStatus.PENDING;
     guest.eventId = "event-123";
-    
+
     // These should cause compilation/runtime errors if not implemented
     (guest as any).phone = "+54 9 11 1234-5678";
     (guest as any).dietaryRestrictions = "Vegan";

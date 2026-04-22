@@ -23,6 +23,11 @@ export class CreateGuestDto {
   @IsOptional()
   phone?: string;
 
+  @ApiProperty({ example: "john.doe@example.com", required: false })
+  @IsString()
+  @IsOptional()
+  email?: string;
+
   @ApiProperty({ example: "Vegan", required: false })
   @IsString()
   @IsOptional()

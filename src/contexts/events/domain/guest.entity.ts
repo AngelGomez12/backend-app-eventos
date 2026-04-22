@@ -46,7 +46,10 @@ export class Guest {
   @Column({ nullable: true })
   tableId?: string;
 
-  @ManyToOne("Table", (table: Table) => table.guests, { nullable: true, onDelete: "SET NULL" })
+  @ManyToOne("Table", (table: Table) => table.guests, {
+    nullable: true,
+    onDelete: "SET NULL",
+  })
   @JoinColumn({ name: "tableId" })
   table?: Table;
 }

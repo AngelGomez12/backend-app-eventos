@@ -1,7 +1,8 @@
 import { validate } from "class-validator";
+import { describe, expect, it } from "vitest";
+
 import { CreateMovementDto } from "@/contexts/events/api/dto/create-movement.dto";
 import { MovementType } from "@/contexts/events/domain/movement.entity";
-import { describe, expect, it } from "vitest";
 
 describe("CreateMovementDto", () => {
   it("should validate a correct DTO", async () => {

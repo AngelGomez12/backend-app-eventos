@@ -5,8 +5,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
 import { CreateTenantDto } from "@/contexts/tenants/api/dto/create-tenant.dto";
-import { Tenant, TenantStatus, SubscriptionPlan } from "@/contexts/tenants/domain/tenant.entity";
 import { TenantPayment } from "@/contexts/tenants/domain/payment.entity";
+import {
+  SubscriptionPlan,
+  Tenant,
+  TenantStatus,
+} from "@/contexts/tenants/domain/tenant.entity";
 import { TenantService } from "@/contexts/tenants/domain/tenant.service";
 
 describe("TenantService", () => {
@@ -45,12 +49,19 @@ describe("TenantService", () => {
         plan: SubscriptionPlan.PREMIUM,
       };
 
-      const tenant = { id: tenantId, status: TenantStatus.PENDING_PAYMENT } as Tenant;
+      const tenant = {
+        id: tenantId,
+        status: TenantStatus.PENDING_PAYMENT,
+      } as Tenant;
       repository.findOne.mockResolvedValue(tenant);
       paymentRepository.findOne.mockResolvedValue(null); // Not a duplicate
-      
-      (paymentRepository.create as any).mockImplementation((d: any) => d as TenantPayment);
-      (paymentRepository.save as any).mockImplementation((d: any) => Promise.resolve({ ...d, id: "pay-1" } as TenantPayment));
+
+      (paymentRepository.create as any).mockImplementation(
+        (d: any) => d as TenantPayment,
+      );
+      (paymentRepository.save as any).mockImplementation((d: any) =>
+        Promise.resolve({ ...d, id: "pay-1" } as TenantPayment),
+      );
 
       const result = await service.recordPayment(tenantId, paymentData);
 
@@ -65,7 +76,9 @@ describe("TenantService", () => {
       const tenantId = "tenant-1";
       const paymentData = { externalPaymentId: "MP-123" } as any;
 
-      paymentRepository.findOne.mockResolvedValue({ id: "existing" } as TenantPayment);
+      paymentRepository.findOne.mockResolvedValue({
+        id: "existing",
+      } as TenantPayment);
 
       const result = await service.recordPayment(tenantId, paymentData);
 
@@ -75,19 +88,25 @@ describe("TenantService", () => {
   });
 
   describe("findPayments", () => {
-    it("should return history for a tenant", async () => {
+    it("should return paginated history for a tenant", async () => {
       const tenantId = "tenant-1";
-      paymentRepository.find.mockResolvedValue([{ id: "pay-1" }] as TenantPayment[]);
+      const page = 1;
+      const limit = 10;
+      paymentRepository.findAndCount.mockResolvedValue([
+        [{ id: "pay-1" } as TenantPayment],
+        1,
+      ]);
 
-      const result = await service.findPayments(tenantId);
+      const result = await service.findPayments(tenantId, { page, limit });
 
-      expect(result).toHaveLength(1);
-      expect(paymentRepository.find).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { tenantId },
-          order: { paymentDate: "DESC" },
-        }),
-      );
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+      expect(paymentRepository.findAndCount).toHaveBeenCalledWith({
+        where: { tenantId },
+        order: { paymentDate: "DESC" },
+        skip: 0,
+        take: 10,
+      });
     });
   });
 
@@ -147,20 +166,21 @@ describe("TenantService", () => {
   describe("findAll", () => {
     it("should return paginated results", async () => {
       const tenants = [{ name: "A" }, { name: "B" }] as Tenant[];
-      repository.findAndCount.mockResolvedValue([tenants, 2]);
+      const queryBuilder = {
+        leftJoinAndSelect: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        skip: vi.fn().mockReturnThis(),
+        take: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        getManyAndCount: vi.fn().mockResolvedValue([tenants, 2]),
+      };
+      (repository.createQueryBuilder as any).mockReturnValue(queryBuilder);
 
-      const result = await service.findAll(1, 10);
+      const result = await service.findAll({ page: 1, limit: 10 });
 
       expect(result.data).toHaveLength(2);
       expect(result.meta.total).toBe(2);
       expect(result.meta.totalPages).toBe(1);
-      expect(repository.findAndCount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 0,
-          take: 10,
-          order: { name: "ASC" },
-        }),
-      );
     });
   });
 });

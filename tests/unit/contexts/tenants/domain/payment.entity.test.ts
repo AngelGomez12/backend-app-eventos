@@ -1,6 +1,7 @@
+import { describe, expect, it } from "vitest";
+
 import { TenantPayment } from "@/contexts/tenants/domain/payment.entity";
 import { SubscriptionPlan } from "@/contexts/tenants/domain/tenant.entity";
-import { describe, expect, it } from "vitest";
 
 describe("TenantPayment Entity", () => {
   it("should have all required properties", () => {

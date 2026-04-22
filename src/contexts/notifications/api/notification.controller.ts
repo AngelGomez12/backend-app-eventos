@@ -1,12 +1,25 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+
+import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
-import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { UserRole } from "@/contexts/users/domain/user.entity";
+
+import { GlobalNotification } from "../domain/notification.entity";
 import { NotificationService } from "../domain/notification.service";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
-import { GlobalNotification } from "../domain/notification.entity";
+import { FilterNotificationDto } from "./dto/filter-notification.dto";
 
 @ApiTags("Notifications")
 @Controller("notifications")
@@ -24,8 +37,8 @@ export class NotificationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: "Get all notifications (Super Admin only)" })
-  async getAll() {
-    return this.notificationService.findAll();
+  async getAll(@Query() filterDto: FilterNotificationDto) {
+    return this.notificationService.findAll(filterDto);
   }
 
   @Post()
@@ -42,7 +55,10 @@ export class NotificationController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: "Update a notification (Super Admin only)" })
-  async update(@Param("id") id: string, @Body() dto: Partial<GlobalNotification>) {
+  async update(
+    @Param("id") id: string,
+    @Body() dto: Partial<GlobalNotification>,
+  ) {
     return this.notificationService.update(id, dto);
   }
 

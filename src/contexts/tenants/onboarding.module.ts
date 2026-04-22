@@ -9,10 +9,7 @@ import { OnboardingService } from "./domain/onboarding.service";
 import { Tenant } from "./domain/tenant.entity";
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Tenant, User]),
-    ConfigModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Tenant, User]), ConfigModule],
   controllers: [OnboardingController],
   providers: [OnboardingService],
   exports: [OnboardingService],

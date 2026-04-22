@@ -1,5 +1,6 @@
-import { Table } from "@/contexts/events/domain/table.entity";
 import { describe, expect, it } from "vitest";
+
+import { Table } from "@/contexts/events/domain/table.entity";
 
 describe("Table Entity", () => {
   it("should have id, name and eventId properties", () => {

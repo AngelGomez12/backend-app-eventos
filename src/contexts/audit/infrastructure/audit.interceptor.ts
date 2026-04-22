@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
+
 import { AuditLogService } from "../domain/audit-log.service";
 
 @Injectable()
@@ -19,10 +20,12 @@ export class AuditInterceptor implements NestInterceptor {
 
     const request = context.switchToHttp().getRequest();
     const { method, url, body, ip } = request;
-    
+
     // Aseguramos que userAgent sea un string
     const rawUserAgent = request.headers ? request.headers["user-agent"] : null;
-    const userAgent = Array.isArray(rawUserAgent) ? rawUserAgent.join(", ") : rawUserAgent;
+    const userAgent = Array.isArray(rawUserAgent)
+      ? rawUserAgent.join(", ")
+      : rawUserAgent;
 
     const monitoredMethods = ["POST", "PATCH", "DELETE", "PUT"];
     if (!monitoredMethods.includes(method)) {
@@ -37,21 +40,28 @@ export class AuditInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const user = request.user;
-        const pathSegments = url.split("?")[0].split("/").filter((s: string) => s);
+        const pathSegments = url.split("?")[0].split("/").filter(Boolean);
         const entity = pathSegments[0] || "Unknown";
-        const entityId = pathSegments[1] && pathSegments[1].length > 10 ? pathSegments[1] : null;
+        const entityId =
+          pathSegments[1] && pathSegments[1].length > 10
+            ? pathSegments[1]
+            : null;
 
-        this.auditLogService.create({
-          userId: user?.sub || user?.id || user?.userId,
-          userEmail: user?.email,
-          tenantId: user?.tenantId,
-          action: method,
-          entity: entity.charAt(0).toUpperCase() + entity.slice(1),
-          entityId,
-          payload: method !== "DELETE" ? body : null,
-          ipAddress: ip,
-          userAgent: userAgent || null,
-        }).catch(err => console.error("Error saving audit log:", err));
+        this.auditLogService
+          .create({
+            userId: user?.sub || user?.id || user?.userId,
+            userEmail: user?.email,
+            tenantId: user?.tenantId,
+            action: method,
+            entity: entity.charAt(0).toUpperCase() + entity.slice(1),
+            entityId,
+            payload: method === "DELETE" ? null : body,
+            ipAddress: ip,
+            userAgent: userAgent || null,
+          })
+          .catch(error => {
+            console.error("Error saving audit log:", error);
+          });
       }),
     );
   }

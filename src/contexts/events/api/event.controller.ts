@@ -6,18 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiForbiddenResponse,
-  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 
 import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
@@ -27,12 +23,13 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
-import { CreateEventDto } from "./dto/create-event.dto";
-import { UpdateEventStatusDto } from "./dto/update-event-status.dto";
-import { CreateEventPaymentDto } from "./dto/create-event-payment.dto";
-import { UpdateEventPriceDto } from "./dto/update-event-price.dto";
-import { UpdateTableLimitDto } from "./dto/update-table-limit.dto";
 import { EventService } from "../domain/event.service";
+import { CreateEventDto } from "./dto/create-event.dto";
+import { CreateEventPaymentDto } from "./dto/create-event-payment.dto";
+import { FilterEventDto } from "./dto/filter-event.dto";
+import { UpdateEventPriceDto } from "./dto/update-event-price.dto";
+import { UpdateEventStatusDto } from "./dto/update-event-status.dto";
+import { UpdateTableLimitDto } from "./dto/update-table-limit.dto";
 
 @ApiTags("Events")
 @ApiBearerAuth()
@@ -48,8 +45,17 @@ export class EventController {
     description:
       "Retrieves events associated with the current tenant. Organizers see only their own events, while Salon Admins see all events in the tenant.",
   })
-  async getEvents(@CurrentTenant() tenantId: string, @CurrentUser() user: any) {
-    return this.eventService.findAll(tenantId, user);
+  async getEvents(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: any,
+    @Query() filterDto: FilterEventDto,
+  ) {
+    return this.eventService.findAll(
+      tenantId,
+      user,
+      filterDto.page,
+      filterDto.limit,
+    );
   }
 
   @Get(":id")
@@ -63,7 +69,10 @@ export class EventController {
     name: "id",
     description: "The unique identifier of the event (UUID)",
   })
-  async getEventById(@Param("id") id: string, @CurrentTenant() tenantId: string) {
+  async getEventById(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+  ) {
     return this.eventService.findOne(id, tenantId);
   }
 
@@ -110,11 +119,14 @@ export class EventController {
     @CurrentTenant() tenantId: string,
     @Body() updateTableLimitDto: UpdateTableLimitDto,
   ) {
-    return this.eventService.updateTableLimit(id, tenantId, updateTableLimitDto);
+    return this.eventService.updateTableLimit(
+      id,
+      tenantId,
+      updateTableLimitDto,
+    );
   }
 
   @Post(":id/payments")
-
   @Roles(UserRole.SALON_ADMIN)
   @ApiOperation({ summary: "Register a new payment for the event" })
   async addPayment(

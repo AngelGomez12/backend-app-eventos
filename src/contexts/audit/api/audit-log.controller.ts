@@ -1,11 +1,14 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+
+import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
+import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
-import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { UserRole } from "@/contexts/users/domain/user.entity";
-import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
+
 import { AuditLogService } from "../domain/audit-log.service";
+import { FilterAuditLogDto } from "./dto/filter-audit-log.dto";
 
 @ApiTags("Audit Logs")
 @ApiBearerAuth()
@@ -17,11 +20,8 @@ export class AuditLogController {
   @Get()
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: "Get all audit logs (Super Admin only)" })
-  async getAll(
-    @Query("page") page = 1,
-    @Query("limit") limit = 50,
-  ) {
-    return this.auditLogService.findAll(Number(page), Number(limit));
+  async getAll(@Query() filterDto: FilterAuditLogDto) {
+    return this.auditLogService.findAll(filterDto);
   }
 
   @Get("me")
@@ -29,9 +29,12 @@ export class AuditLogController {
   @ApiOperation({ summary: "Get audit logs for the current tenant" })
   async getMyLogs(
     @CurrentTenant() tenantId: string,
-    @Query("page") page = 1,
-    @Query("limit") limit = 10,
+    @Query() filterDto: FilterAuditLogDto,
   ) {
-    return this.auditLogService.findByTenant(tenantId, Number(page), Number(limit));
+    return this.auditLogService.findByTenant(
+      tenantId,
+      filterDto.page,
+      filterDto.limit,
+    );
   }
 }

@@ -1,7 +1,8 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { mock, MockProxy } from "vitest-mock-extended";
+
 import { TableController } from "@/contexts/events/api/table.controller";
 import { TableService } from "@/contexts/events/domain/table.service";
-import { describe, expect, it, beforeEach } from "vitest";
-import { mock, MockProxy } from "vitest-mock-extended";
 
 describe("TableController", () => {
   let controller: TableController;
@@ -13,15 +14,25 @@ describe("TableController", () => {
   });
 
   describe("getTables", () => {
-    it("should return tables from service", async () => {
+    it("should return paginated tables from service", async () => {
       const eventId = "event-1";
       const tenantId = "tenant-1";
-      service.findAll.mockResolvedValue([{ id: "table-1", name: "Mesa 1" }] as any);
+      const paginationDto = { page: 1, limit: 10 };
+      const paginatedResponse = {
+        data: [{ id: "table-1", name: "Table A" }],
+        meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      };
+      service.findAll.mockResolvedValue(paginatedResponse as any);
 
-      const result = await controller.getTables(eventId, tenantId);
+      const result = await controller.getTables(
+        eventId,
+        tenantId,
+        paginationDto,
+      );
 
-      expect(service.findAll).toHaveBeenCalledWith(tenantId, eventId);
-      expect(result).toHaveLength(1);
+      expect(service.findAll).toHaveBeenCalledWith(tenantId, eventId, 1, 10);
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
     });
   });
 

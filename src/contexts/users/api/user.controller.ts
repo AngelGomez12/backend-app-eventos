@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -16,8 +16,9 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 
 import { UserRole } from "../domain/user.entity";
-import { CreateUserDto } from "./dto/create-user.dto";
 import { UserService } from "../domain/user.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { FilterUserDto } from "./dto/filter-user.dto";
 
 @ApiTags("Users")
 @ApiBearerAuth()
@@ -33,8 +34,11 @@ export class UserController {
     description:
       "Retrieves all users belonging to the current tenant. Restricted to Salon Admins.",
   })
-  async getTenantUsers(@CurrentTenant() tenantId: string) {
-    return this.userService.findAll(tenantId);
+  async getTenantUsers(
+    @CurrentTenant() tenantId: string,
+    @Query() filterDto: FilterUserDto,
+  ) {
+    return this.userService.findAll(tenantId, filterDto.page, filterDto.limit);
   }
 
   @Post()

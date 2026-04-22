@@ -1,7 +1,8 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { mock, MockProxy } from "vitest-mock-extended";
+
 import { TenantController } from "@/contexts/tenants/api/tenant.controller";
 import { TenantService } from "@/contexts/tenants/domain/tenant.service";
-import { describe, expect, it, beforeEach } from "vitest";
-import { mock, MockProxy } from "vitest-mock-extended";
 
 describe("TenantController", () => {
   let controller: TenantController;
@@ -13,14 +14,19 @@ describe("TenantController", () => {
   });
 
   describe("getPayments", () => {
-    it("should return payment history from service", async () => {
+    it("should return paginated payment history from service", async () => {
       const tenantId = "tenant-1";
-      service.findPayments.mockResolvedValue([{ id: "pay-1", amount: 5000 }] as any);
+      const filterDto = { page: 1, limit: 10 };
+      const paginatedResponse = {
+        data: [{ id: "payment-1" }],
+        meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      };
+      service.findPayments.mockResolvedValue(paginatedResponse as any);
 
-      const result = await controller.getPayments(tenantId);
+      const result = await controller.getPayments(tenantId, filterDto);
 
-      expect(service.findPayments).toHaveBeenCalledWith(tenantId);
-      expect(result).toHaveLength(1);
+      expect(service.findPayments).toHaveBeenCalledWith(tenantId, filterDto);
+      expect(result.data).toHaveLength(1);
     });
   });
 });

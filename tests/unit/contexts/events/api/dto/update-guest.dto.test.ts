@@ -1,7 +1,8 @@
+import { validate } from "class-validator";
+import { describe, expect, it } from "vitest";
+
 import { UpdateGuestDto } from "@/contexts/events/api/dto/update-guest.dto";
 import { AttendanceStatus } from "@/contexts/events/domain/guest.entity";
-import { describe, expect, it } from "vitest";
-import { validate } from "class-validator";
 
 describe("UpdateGuestDto", () => {
   it("should validate a correct DTO", async () => {

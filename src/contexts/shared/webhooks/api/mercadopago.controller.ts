@@ -41,7 +41,9 @@ export class MercadoPagoWebhookController {
               externalPaymentId: resourceId,
               plan: (paymentData as any).metadata?.plan || "PREMIUM", // Fallback or from metadata
             });
-            console.log(`Tenant ${tenantId} activated via Mercado Pago payment ${resourceId}`);
+            console.log(
+              `Tenant ${tenantId} activated via Mercado Pago payment ${resourceId}`,
+            );
           }
         }
       } catch (error) {

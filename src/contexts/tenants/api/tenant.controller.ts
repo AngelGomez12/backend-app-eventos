@@ -1,25 +1,27 @@
-import { Body, Controller, Get, Patch, Param, Post, Query, UseGuards, ForbiddenException } from "@nestjs/common";
 import {
-  ApiBadRequestResponse,
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiForbiddenResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from "@nestjs/swagger";
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 
+import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
 import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
-import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
 
+import { PaginatedResponse } from "../../shared/domain/pagination.interface";
 import { Tenant, TenantStatus } from "../domain/tenant.entity";
 import { TenantService } from "../domain/tenant.service";
 import { CreateTenantDto } from "./dto/create-tenant.dto";
+import { FilterTenantDto } from "./dto/filter-tenant.dto";
 
 @ApiTags("Tenants")
 @ApiBearerAuth()
@@ -34,10 +36,10 @@ export class TenantController {
     summary: "List all tenants",
     description: "Restricted to Super Admins.",
   })
-  async getAllTenants(@Query("page") page = 1, @Query("limit") limit = 10) {
-    const pageNumber = Math.max(1, Number(page));
-    const limitNumber = Math.max(1, Number(limit));
-    return this.tenantService.findAll(pageNumber, limitNumber);
+  async getAllTenants(
+    @Query() filterDto: FilterTenantDto,
+  ): Promise<PaginatedResponse<Tenant>> {
+    return this.tenantService.findAll(filterDto);
   }
 
   @Get("me")
@@ -52,16 +54,24 @@ export class TenantController {
   @ApiOperation({ summary: "Update current tenant information" })
   async updateMe(
     @CurrentTenant() tenantId: string,
-    @Body() updateData: Partial<Tenant>
+    @Body() updateData: Partial<Tenant>,
   ) {
     // Campos prohibidos para el Salon Admin
-    const forbiddenFields = ["status", "subscriptionPlan", "subscriptionEndDate", "mercadoPagoId", "isActive"];
+    const forbiddenFields = [
+      "status",
+      "subscriptionPlan",
+      "subscriptionEndDate",
+      "mercadoPagoId",
+      "isActive",
+    ];
     for (const field of forbiddenFields) {
       if (field in updateData) {
-        throw new ForbiddenException(`You are not allowed to update the ${field} field`);
+        throw new ForbiddenException(
+          `You are not allowed to update the ${field} field`,
+        );
       }
     }
-    
+
     return this.tenantService.update(tenantId, updateData);
   }
 
@@ -82,8 +92,11 @@ export class TenantController {
   @Get(":id/payments")
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: "Get tenant payment history" })
-  async getPayments(@Param("id") id: string) {
-    return this.tenantService.findPayments(id);
+  async getPayments(
+    @Param("id") id: string,
+    @Query() filterDto: FilterTenantDto,
+  ) {
+    return this.tenantService.findPayments(id, filterDto);
   }
 
   @Patch(":id/status")
@@ -91,7 +104,7 @@ export class TenantController {
   @ApiOperation({ summary: "Update tenant status" })
   async updateStatus(
     @Param("id") id: string,
-    @Body("status") status: TenantStatus
+    @Body("status") status: TenantStatus,
   ) {
     return this.tenantService.updateStatus(id, status);
   }
@@ -101,7 +114,7 @@ export class TenantController {
   @ApiOperation({ summary: "Update tenant data" })
   async updateTenant(
     @Param("id") id: string,
-    @Body() updateData: Partial<Tenant>
+    @Body() updateData: Partial<Tenant>,
   ) {
     return this.tenantService.update(id, updateData);
   }

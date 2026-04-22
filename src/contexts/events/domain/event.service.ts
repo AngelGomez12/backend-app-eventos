@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Event, EventStatus } from "./event.entity";
-import { EventPayment } from "./event-payment.entity";
+
+import { PaginatedResponse } from "@/contexts/shared/domain/pagination.interface";
+import { UserRole } from "@/contexts/users/domain/user.entity";
+
 import { CreateEventDto } from "../api/dto/create-event.dto";
-import { UpdateEventStatusDto } from "../api/dto/update-event-status.dto";
 import { CreateEventPaymentDto } from "../api/dto/create-event-payment.dto";
 import { UpdateEventPriceDto } from "../api/dto/update-event-price.dto";
+import { UpdateEventStatusDto } from "../api/dto/update-event-status.dto";
 import { UpdateTableLimitDto } from "../api/dto/update-table-limit.dto";
-import { UserRole } from "@/contexts/users/domain/user.entity";
+import { Event, EventStatus } from "./event.entity";
+import { EventPayment } from "./event-payment.entity";
 
 @Injectable()
 export class EventService {
@@ -19,16 +22,38 @@ export class EventService {
     private readonly paymentRepository: Repository<EventPayment>,
   ) {}
 
-  async findAll(tenantId: string, user: any) {
-    const query = this.eventRepository.createQueryBuilder("event")
+  async findAll(
+    tenantId: string,
+    user: any,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<Event>> {
+    const query = this.eventRepository
+      .createQueryBuilder("event")
       .where("event.tenantId = :tenantId", { tenantId })
       .leftJoinAndSelect("event.organizer", "organizer");
 
     if (user.role === UserRole.ORGANIZER) {
-      query.andWhere("event.organizerId = :userId", { userId: user.userId || user.id });
+      query.andWhere("event.organizerId = :userId", {
+        userId: user.userId || user.id,
+      });
     }
 
-    return query.orderBy("event.date", "ASC").getMany();
+    const [data, total] = await query
+      .orderBy("event.date", "ASC")
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string, tenantId: string) {
@@ -61,24 +86,36 @@ export class EventService {
   async updatePrice(id: string, tenantId: string, dto: UpdateEventPriceDto) {
     const event = await this.findOne(id, tenantId);
     event.basePrice = dto.basePrice;
-    
-    const totalPaid = event.payments?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
-    if (event.status === EventStatus.PENDING_DEPOSIT && totalPaid >= event.basePrice) {
+
+    const totalPaid =
+      event.payments.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
+    if (
+      event.status === EventStatus.PENDING_DEPOSIT &&
+      totalPaid >= event.basePrice
+    ) {
       event.status = EventStatus.CONFIRMED;
     }
 
     return this.eventRepository.save(event);
   }
 
-  async updateTableLimit(id: string, tenantId: string, dto: UpdateTableLimitDto) {
+  async updateTableLimit(
+    id: string,
+    tenantId: string,
+    dto: UpdateTableLimitDto,
+  ) {
     const event = await this.findOne(id, tenantId);
     event.maxTableCount = dto.maxTableCount;
     return this.eventRepository.save(event);
   }
 
-  async addPayment(eventId: string, tenantId: string, dto: CreateEventPaymentDto) {
+  async addPayment(
+    eventId: string,
+    tenantId: string,
+    dto: CreateEventPaymentDto,
+  ) {
     const event = await this.findOne(eventId, tenantId);
-    
+
     const payment = this.paymentRepository.create({
       ...dto,
       paymentDate: new Date(dto.paymentDate),
@@ -89,9 +126,16 @@ export class EventService {
 
     // Re-calculate balance and update status if necessary
     const updatedEvent = await this.findOne(eventId, tenantId);
-    const totalPaid = updatedEvent.payments?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
-    
-    if (updatedEvent.status === EventStatus.PENDING_DEPOSIT && totalPaid >= updatedEvent.basePrice) {
+    const totalPaid =
+      updatedEvent.payments.reduce(
+        (acc, curr) => acc + Number(curr.amount),
+        0,
+      ) || 0;
+
+    if (
+      updatedEvent.status === EventStatus.PENDING_DEPOSIT &&
+      totalPaid >= updatedEvent.basePrice
+    ) {
       updatedEvent.status = EventStatus.CONFIRMED;
       await this.eventRepository.save(updatedEvent);
     }
@@ -102,7 +146,7 @@ export class EventService {
   async removePayment(eventId: string, paymentId: string, tenantId: string) {
     // Ensure the event belongs to the tenant
     await this.findOne(eventId, tenantId);
-    
+
     const payment = await this.paymentRepository.findOne({
       where: { id: paymentId, eventId },
     });

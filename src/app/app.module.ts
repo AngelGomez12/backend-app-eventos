@@ -5,8 +5,8 @@ import {
   RequestMethod,
 } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { APP_INTERCEPTOR } from "@nestjs/core";
+import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { HealthModule } from "@/app/health/health.module";
 
@@ -15,16 +15,16 @@ import { AuthMiddleware } from "@/shared/middleware/auth.middleware";
 import { CorrelationIdMiddleware } from "@/shared/middleware/correlation-id.middleware";
 import { LoggerMiddleware } from "@/shared/middleware/logger.middleware";
 
+import { AuditModule } from "@/contexts/audit/audit.module";
+import { AuditInterceptor } from "@/contexts/audit/infrastructure/audit.interceptor";
 import { AuthModule } from "@/contexts/auth/auth.module";
 import { EventModule } from "@/contexts/events/event.module";
+import { NotificationModule } from "@/contexts/notifications/notification.module";
 import { RsvpModule } from "@/contexts/rsvp/rsvp.module";
 import { WebhooksModule } from "@/contexts/shared/webhooks/webhooks.module";
 import { OnboardingModule } from "@/contexts/tenants/onboarding.module";
 import { TenantModule } from "@/contexts/tenants/tenant.module";
 import { UserModule } from "@/contexts/users/user.module";
-import { NotificationModule } from "@/contexts/notifications/notification.module";
-import { AuditModule } from "@/contexts/audit/audit.module";
-import { AuditInterceptor } from "@/contexts/audit/infrastructure/audit.interceptor";
 
 @Module({
   imports: [

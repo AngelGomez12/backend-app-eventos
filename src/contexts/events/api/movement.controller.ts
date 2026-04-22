@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -25,8 +26,9 @@ import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
-import { CreateMovementDto } from "./dto/create-movement.dto";
 import { MovementService } from "../domain/movement.service";
+import { CreateMovementDto } from "./dto/create-movement.dto";
+import { FilterMovementDto } from "./dto/filter-movement.dto";
 
 @ApiTags("Movements")
 @ApiBearerAuth()
@@ -50,8 +52,14 @@ export class MovementController {
   getMovements(
     @Param("eventId") eventId: string,
     @CurrentTenant() tenantId: string,
+    @Query() filterDto: FilterMovementDto,
   ) {
-    return this.movementService.findAll(tenantId, eventId);
+    return this.movementService.findAll(
+      tenantId,
+      eventId,
+      filterDto.page,
+      filterDto.limit,
+    );
   }
 
   @Post()
