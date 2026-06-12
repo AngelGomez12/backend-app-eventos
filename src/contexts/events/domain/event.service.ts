@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
 import { PaginatedResponse } from "@/contexts/shared/domain/pagination.interface";
+import { FirebaseStorageService } from "@/contexts/shared/infrastructure/firebase/firebase-storage.service";
 import { UserRole } from "@/contexts/users/domain/user.entity";
 
 import { CreateEventDto } from "../api/dto/create-event.dto";
@@ -20,6 +21,7 @@ export class EventService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(EventPayment)
     private readonly paymentRepository: Repository<EventPayment>,
+    private readonly firebaseStorageService: FirebaseStorageService,
   ) {}
 
   async findAll(
@@ -156,5 +158,29 @@ export class EventService {
     }
 
     return this.paymentRepository.remove(payment);
+  }
+
+  async remove(id: string, tenantId: string): Promise<void> {
+    const event = await this.findOne(id, tenantId);
+    await this.eventRepository.remove(event);
+  }
+
+  async uploadCover(
+    eventId: string,
+    tenantId: string,
+    file: Buffer,
+    contentType: string,
+  ): Promise<Event> {
+    const event = await this.findOne(eventId, tenantId);
+
+    const path = `events/${tenantId}/${eventId}/cover`;
+    const coverUrl = await this.firebaseStorageService.uploadFile(
+      path,
+      file,
+      contentType,
+    );
+
+    event.coverUrl = coverUrl;
+    return this.eventRepository.save(event);
   }
 }

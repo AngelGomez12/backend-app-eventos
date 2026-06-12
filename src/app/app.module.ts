@@ -21,6 +21,8 @@ import { AuthModule } from "@/contexts/auth/auth.module";
 import { EventModule } from "@/contexts/events/event.module";
 import { NotificationModule } from "@/contexts/notifications/notification.module";
 import { RsvpModule } from "@/contexts/rsvp/rsvp.module";
+import { FirebaseModule } from "@/contexts/shared/infrastructure/firebase/firebase.module";
+import { NotificationModule as SharedNotificationModule } from "@/contexts/shared/infrastructure/notifications/notification.module";
 import { WebhooksModule } from "@/contexts/shared/webhooks/webhooks.module";
 import { OnboardingModule } from "@/contexts/tenants/onboarding.module";
 import { TenantModule } from "@/contexts/tenants/tenant.module";
@@ -52,7 +54,9 @@ import { UserModule } from "@/contexts/users/user.module";
     OnboardingModule,
     WebhooksModule,
     NotificationModule,
+    SharedNotificationModule,
     AuditModule,
+    FirebaseModule,
   ],
   providers: [
     {

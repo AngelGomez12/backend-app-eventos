@@ -8,17 +8,23 @@ import { DeepMockProxy, mockDeep } from "vitest-mock-extended";
 import { CreateGuestDto } from "@/contexts/events/api/dto/create-guest.dto";
 import { UpdateGuestDto } from "@/contexts/events/api/dto/update-guest.dto";
 import { EventService } from "@/contexts/events/domain/event.service";
+import { TableService } from "@/contexts/events/domain/table.service";
 import { AttendanceStatus, Guest } from "@/contexts/events/domain/guest.entity";
 import { GuestService } from "@/contexts/events/domain/guest.service";
+import { NotificationService } from "@/contexts/shared/infrastructure/notifications/notification.service";
 
 describe("GuestService", () => {
   let service: GuestService;
   let guestRepository: DeepMockProxy<Repository<Guest>>;
   let eventService: DeepMockProxy<EventService>;
+  let tableService: DeepMockProxy<TableService>;
+  let notificationService: DeepMockProxy<NotificationService>;
 
   beforeEach(async () => {
     guestRepository = mockDeep<Repository<Guest>>();
     eventService = mockDeep<EventService>();
+    tableService = mockDeep<TableService>();
+    notificationService = mockDeep<NotificationService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -30,6 +36,14 @@ describe("GuestService", () => {
         {
           provide: EventService,
           useValue: eventService,
+        },
+        {
+          provide: TableService,
+          useValue: tableService,
+        },
+        {
+          provide: NotificationService,
+          useValue: notificationService,
         },
       ],
     }).compile();

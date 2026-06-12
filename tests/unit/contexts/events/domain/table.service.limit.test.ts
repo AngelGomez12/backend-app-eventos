@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, DataSource } from "typeorm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DeepMockProxy, mockDeep } from "vitest-mock-extended";
 
@@ -13,10 +13,12 @@ describe("TableService (Limit Validation)", () => {
   let service: TableService;
   let repository: DeepMockProxy<Repository<Table>>;
   let eventService: DeepMockProxy<EventService>;
+  let dataSource: DeepMockProxy<DataSource>;
 
   beforeEach(async () => {
     repository = mockDeep<Repository<Table>>();
     eventService = mockDeep<EventService>();
+    dataSource = mockDeep<DataSource>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,6 +30,10 @@ describe("TableService (Limit Validation)", () => {
         {
           provide: EventService,
           useValue: eventService,
+        },
+        {
+          provide: DataSource,
+          useValue: dataSource,
         },
       ],
     }).compile();

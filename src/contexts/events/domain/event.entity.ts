@@ -4,6 +4,7 @@ import type { Table } from "@/contexts/events/domain/table.entity";
 import type { Tenant } from "@/contexts/tenants/domain/tenant.entity";
 import type { User } from "@/contexts/users/domain/user.entity";
 import type { EventPayment } from "./event-payment.entity";
+import type { FloorPlanElement } from "./floor-plan-element.entity";
 import type { EventMovement } from "./movement.entity";
 
 import {
@@ -59,6 +60,9 @@ export class Event {
   @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
   basePrice: number;
 
+  @Column({ type: "varchar", nullable: true })
+  coverUrl?: string;
+
   @Column({ type: "int", default: 0 })
   maxTableCount: number;
 
@@ -81,6 +85,9 @@ export class Event {
 
   @OneToMany("Table", "event")
   tables: Table[];
+
+  @OneToMany("FloorPlanElement", "event")
+  floorPlanElements: FloorPlanElement[];
 
   @OneToMany("EventPayment", "event")
   payments: EventPayment[];

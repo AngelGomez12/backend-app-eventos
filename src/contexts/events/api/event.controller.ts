@@ -7,8 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -146,5 +149,29 @@ export class EventController {
     @CurrentTenant() tenantId: string,
   ) {
     return this.eventService.removePayment(id, paymentId, tenantId);
+  }
+
+  @Delete(":id")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({ summary: "Delete event" })
+  async deleteEvent(@Param("id") id: string, @CurrentTenant() tenantId: string) {
+    return this.eventService.remove(id, tenantId);
+  }
+
+  @Post(":id/cover")
+  @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiOperation({ summary: "Upload event cover image" })
+  async uploadCover(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.eventService.uploadCover(
+      id,
+      tenantId,
+      file.buffer,
+      file.mimetype,
+    );
   }
 }

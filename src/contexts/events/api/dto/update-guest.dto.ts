@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsEnum, IsOptional, IsString, IsUUID, ValidateIf } from "class-validator";
 
-import { AttendanceStatus } from "../../domain/guest.entity";
+import { AttendanceStatus, DietaryRestriction } from "../../domain/guest.entity";
 
 export class UpdateGuestDto {
   @ApiProperty({ example: "John Doe", required: false })
@@ -23,13 +23,23 @@ export class UpdateGuestDto {
   @IsOptional()
   phone?: string;
 
-  @ApiProperty({ example: "Vegan", required: false })
+  @ApiProperty({ example: "john.doe@example.com", required: false })
   @IsString()
   @IsOptional()
-  dietaryRestrictions?: string;
+  email?: string;
 
-  @ApiProperty({ example: "uuid-of-table", required: false })
+  @ApiProperty({
+    enum: DietaryRestriction,
+    example: DietaryRestriction.NONE,
+    required: false,
+  })
+  @IsEnum(DietaryRestriction)
+  @IsOptional()
+  dietaryRestrictions?: DietaryRestriction;
+
+  @ApiProperty({ example: "uuid-of-table", required: false, nullable: true })
+  @ValidateIf((o) => o.tableId !== null)
   @IsUUID()
   @IsOptional()
-  tableId?: string;
+  tableId?: string | null;
 }

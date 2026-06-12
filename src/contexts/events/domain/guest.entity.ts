@@ -15,6 +15,14 @@ export enum AttendanceStatus {
   DECLINED = "DECLINED",
 }
 
+export enum DietaryRestriction {
+  NONE = "NONE",
+  VEGETARIAN = "VEGETARIAN",
+  VEGAN = "VEGAN",
+  CELIAC = "CELIAC",
+  OTHER = "OTHER",
+}
+
 @Entity("guests")
 export class Guest {
   @PrimaryGeneratedColumn("uuid")
@@ -34,7 +42,15 @@ export class Guest {
   phone?: string;
 
   @Column({ nullable: true })
-  dietaryRestrictions?: string;
+  email?: string;
+
+  @Column({
+    type: "enum",
+    enum: DietaryRestriction,
+    default: DietaryRestriction.NONE,
+    nullable: true,
+  })
+  dietaryRestrictions?: DietaryRestriction;
 
   @Column()
   eventId: string;

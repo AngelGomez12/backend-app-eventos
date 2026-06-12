@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -65,6 +66,32 @@ export class GuestController {
       filterDto.limit,
       filterDto.search,
     );
+  }
+
+  @Get(":guestId")
+  @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
+  @ApiOperation({
+    summary: "Get guest details by ID",
+    description: "Retrieves specific guest information.",
+  })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiParam({
+    name: "guestId",
+    description: "The unique identifier of the guest (UUID)",
+  })
+  @ApiOkResponse({ description: "Guest details retrieved successfully." })
+  @ApiNotFoundResponse({ description: "Guest not found." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
+  getGuest(
+    @Param("eventId") eventId: string,
+    @Param("guestId") guestId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.guestService.findOne(tenantId, eventId, guestId);
   }
 
   @Post()
@@ -138,5 +165,32 @@ export class GuestController {
     @CurrentTenant() tenantId: string,
   ) {
     return this.guestService.remove(tenantId, eventId, guestId);
+  }
+
+  @Post(":guestId/send-ticket")
+  @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
+  @ApiOperation({
+    summary: "Send digital ticket to guest",
+    description: "Sends the digital ticket (QR code) via email to the specified guest.",
+  })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiParam({
+    name: "guestId",
+    description: "The unique identifier of the guest (UUID)",
+  })
+  @ApiOkResponse({ description: "Ticket sent successfully." })
+  @ApiBadRequestResponse({ description: "Guest has no email or other error occurred." })
+  @ApiNotFoundResponse({ description: "Guest not found." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
+  sendTicket(
+    @Param("eventId") eventId: string,
+    @Param("guestId") guestId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.guestService.sendTicket(tenantId, eventId, guestId);
   }
 }

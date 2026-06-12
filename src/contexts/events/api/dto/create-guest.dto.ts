@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-import { AttendanceStatus } from "../../domain/guest.entity";
+import { AttendanceStatus, DietaryRestriction } from "../../domain/guest.entity";
 
 export class CreateGuestDto {
   @ApiProperty({ example: "John Doe" })
@@ -28,8 +28,12 @@ export class CreateGuestDto {
   @IsOptional()
   email?: string;
 
-  @ApiProperty({ example: "Vegan", required: false })
-  @IsString()
+  @ApiProperty({
+    enum: DietaryRestriction,
+    example: DietaryRestriction.NONE,
+    required: false,
+  })
+  @IsEnum(DietaryRestriction)
   @IsOptional()
-  dietaryRestrictions?: string;
+  dietaryRestrictions?: DietaryRestriction;
 }

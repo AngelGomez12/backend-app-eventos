@@ -23,7 +23,7 @@
       "@/shared/*": ["src/contexts/shared/*"],
       "@/tests/*": ["tests/*"]
     },
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "node", "multer"]
   },
   "exclude": ["node_modules", "dist"]
 }

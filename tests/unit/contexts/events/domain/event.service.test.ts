@@ -8,15 +8,18 @@ import { Event } from "@/contexts/events/domain/event.entity";
 import { EventService } from "@/contexts/events/domain/event.service";
 import { EventPayment } from "@/contexts/events/domain/event-payment.entity";
 import { UserRole } from "@/contexts/users/domain/user.entity";
+import { FirebaseStorageService } from "@/contexts/shared/infrastructure/firebase/firebase-storage.service";
 
 describe("EventService", () => {
   let service: EventService;
   let eventRepository: DeepMockProxy<Repository<Event>>;
   let paymentRepository: DeepMockProxy<Repository<EventPayment>>;
+  let firebaseStorageService: DeepMockProxy<FirebaseStorageService>;
 
   beforeEach(async () => {
     eventRepository = mockDeep<Repository<Event>>();
     paymentRepository = mockDeep<Repository<EventPayment>>();
+    firebaseStorageService = mockDeep<FirebaseStorageService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,6 +31,10 @@ describe("EventService", () => {
         {
           provide: getRepositoryToken(EventPayment),
           useValue: paymentRepository,
+        },
+        {
+          provide: FirebaseStorageService,
+          useValue: firebaseStorageService,
         },
       ],
     }).compile();

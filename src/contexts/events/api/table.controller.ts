@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -21,14 +22,16 @@ import {
 } from "@nestjs/swagger";
 
 import { CurrentTenant } from "@/contexts/auth/decorators/current-tenant.decorator";
+import { CurrentUser } from "@/contexts/auth/decorators/current-user.decorator";
 import { Roles } from "@/contexts/auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "@/contexts/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "@/contexts/auth/guards/roles.guard";
-import { UserRole } from "@/contexts/users/domain/user.entity";
+import { User, UserRole } from "@/contexts/users/domain/user.entity";
 
 import { TableService } from "../domain/table.service";
 import { CreateTableDto } from "./dto/create-table.dto";
 import { FilterTableDto } from "./dto/filter-table.dto";
+import { UpdateTablePositionsDto } from "./dto/update-table-positions.dto";
 
 @ApiTags("Tables")
 @ApiBearerAuth()
@@ -63,7 +66,7 @@ export class TableController {
   }
 
   @Post()
-  @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
+  @Roles(UserRole.SALON_ADMIN)
   @ApiOperation({
     summary: "Create a new table",
   })
@@ -83,8 +86,68 @@ export class TableController {
     return this.tableService.create(tenantId, eventId, createTableDto);
   }
 
+  @Patch("positions")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({
+    summary: "Update multiple table positions",
+  })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiOkResponse({ description: "Table positions updated successfully." })
+  @ApiBadRequestResponse({ description: "Invalid input data." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
+  patchPositions(
+    @Param("eventId") eventId: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: User,
+    @Body() updatePositionsDto: UpdateTablePositionsDto,
+  ) {
+    return this.tableService.updatePositions(
+      tenantId,
+      eventId,
+      updatePositionsDto,
+      user.role,
+    );
+  }
+
+  @Patch(":tableId")
+  @Roles(UserRole.SALON_ADMIN)
+  @ApiOperation({
+    summary: "Update an individual table",
+  })
+  @ApiParam({
+    name: "eventId",
+    description: "The unique identifier of the event (UUID)",
+  })
+  @ApiParam({
+    name: "tableId",
+    description: "The unique identifier of the table (UUID)",
+  })
+  @ApiOkResponse({ description: "Table updated successfully." })
+  @ApiBadRequestResponse({ description: "Invalid input data." })
+  @ApiUnauthorizedResponse({ description: "Invalid or missing JWT token." })
+  @ApiForbiddenResponse({ description: "Insufficient permissions." })
+  patchTable(
+    @Param("eventId") eventId: string,
+    @Param("tableId") tableId: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: User,
+    @Body() updateTableDto: Partial<CreateTableDto>,
+  ) {
+    return this.tableService.update(
+      tenantId,
+      eventId,
+      tableId,
+      updateTableDto,
+      user.role,
+    );
+  }
+
   @Delete(":tableId")
-  @Roles(UserRole.SALON_ADMIN, UserRole.ORGANIZER)
+  @Roles(UserRole.SALON_ADMIN)
   @ApiOperation({
     summary: "Remove table",
   })

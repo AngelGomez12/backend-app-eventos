@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { ILike, Repository } from "typeorm";
+import { FindOptionsWhere, ILike, Repository } from "typeorm";
 
 import { PaginatedResponse } from "@/contexts/shared/domain/pagination.interface";
+import { NotificationService } from "@/contexts/shared/infrastructure/notifications/notification.service";
 
 import { CreateGuestDto } from "../api/dto/create-guest.dto";
 import { UpdateGuestDto } from "../api/dto/update-guest.dto";
@@ -15,6 +20,7 @@ export class GuestService {
     @InjectRepository(Guest)
     private readonly guestRepository: Repository<Guest>,
     private readonly eventService: EventService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findAll(
@@ -27,7 +33,7 @@ export class GuestService {
     // Ensure the event belongs to the tenant
     await this.eventService.findOne(eventId, tenantId);
 
-    const where: any = { eventId };
+    const where: FindOptionsWhere<Guest> = { eventId };
     if (search) {
       where.fullName = ILike(`%${search}%`);
     }
@@ -92,5 +98,39 @@ export class GuestService {
   async remove(tenantId: string, eventId: string, guestId: string) {
     const guest = await this.findOne(tenantId, eventId, guestId);
     return this.guestRepository.remove(guest);
+  }
+
+  async findOnePublic(guestId: string) {
+    const guest = await this.guestRepository.findOne({
+      where: { id: guestId },
+      relations: ["event", "event.tenant"],
+    });
+
+    if (!guest) {
+      throw new NotFoundException(`Guest with ID ${guestId} not found`);
+    }
+
+    return guest;
+  }
+
+  async sendTicket(tenantId: string, eventId: string, guestId: string) {
+    const guest = await this.guestRepository.findOne({
+      where: { id: guestId, eventId },
+      relations: ["event", "event.tenant"],
+    });
+
+    if (!guest) {
+      throw new NotFoundException("Guest not found");
+    }
+
+    if (!guest.email) {
+      throw new BadRequestException("Guest has no email address");
+    }
+
+    await this.notificationService.sendGuestTicket(
+      guest,
+      guest.event,
+      guest.event.tenant,
+    );
   }
 }

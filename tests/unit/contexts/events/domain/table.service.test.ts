@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { mock, MockProxy } from "vitest-mock-extended";
 
@@ -11,11 +11,13 @@ describe("TableService", () => {
   let service: TableService;
   let tableRepository: MockProxy<Repository<Table>>;
   let eventService: MockProxy<EventService>;
+  let dataSource: MockProxy<DataSource>;
 
   beforeEach(() => {
     tableRepository = mock<Repository<Table>>();
     eventService = mock<EventService>();
-    service = new TableService(tableRepository, eventService);
+    dataSource = mock<DataSource>();
+    service = new TableService(tableRepository, eventService, dataSource);
   });
 
   describe("create", () => {
